@@ -12,6 +12,7 @@ vue 发布在 npm 上，每个 npm 包（相当于一个项目）都需要一个
 |main|入口|
 |module|module和main非常类似，在webpack2以上是把module做默认入口|
 |scripts|scripts定义了很多脚本，每个脚本都是一个任务，通过npm run 值（dev，bulid）可以进行各种不同的脚本，"build"就相当于跑scripts文件夹夏的build.js文件|
+
 ![](./images/build.png)
 
 **build.js文件解析**
