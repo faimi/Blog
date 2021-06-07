@@ -5,7 +5,7 @@
 ## Vue源码目录结构
 
 ```javascript
-src
+src                 # 源码全在这下面
 ├── compiler        # 编译相关的代码全在compiler目录
 ├── core            # 核心代码（灵魂部分）
    ├──components         # 内置组件
