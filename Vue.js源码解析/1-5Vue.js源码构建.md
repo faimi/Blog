@@ -17,9 +17,15 @@ vue 发布在 npm 上，每个 npm 包（相当于一个项目）都需要一个
 
 **build.js文件解析**
 定义依赖的模块
+
 ![](./images/buildjs1.png)
+
 拿到构建所需要的所有的配置
+
 ![](./images/buildjs2.png)
+
 对配置进行过滤
+
 ![](./images/buildjs3.png)
+
 调用build函数做真正的构建过程
