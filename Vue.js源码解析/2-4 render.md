@@ -1,6 +1,6 @@
 **src/core/instance/render**
 
-定义了原型上`_render`的私有方法，返回的是一个`VNode`。从`$options`拿到`render`函数（`render`函数可以自己写也可以编译生成），利用`render.call()`方法传入`vm._renderProxy`和`vm.$createElement`。`call`的第一个参数是当前上下文，`vm._renderProxy`在生产环境下就是`vm`，在开发环境中可能是`proxy`对象。`vm.$createElement`在`initRender`中定义，`initRender`在`src/core/instance/init.js`中执行`initRender(vm)`。
+定义了原型上`_render`的私有方法，返回的是一个`VNode`。从`$options`拿到`render`函数（`render`函数可以自己写也可以编译生成），利用`render.call()`方法传入`vm._renderProxy`和`vm.$createElement`。`call`的第一个参数是当前上下文，`vm._renderProxy`在生产环境下就是`vm`，在开发环境中可能是`proxy`对象。`vm.$createElement`在`initRender`中定义，`initRender`在`src/core/instance/init.js`中执行`initRender(vm)`。`vm._renderProxy`也是发生在`src/core/instance/init.js`中，如果当前是生产环境，就`vm._renderProxy = vm`，开发阶段则`initProxy(vm)`，`initProxy()`的定义看**src/core/instance/proxy.js文件解析**。`render`方法实际上就是生成一个`vnode`，再对`vnode`进行判断是不是`VNode`。
 
 ```javascript
 Vue.prototype._render = function (): VNode {
@@ -116,11 +116,105 @@ export default {
       "div",
       {
         attrs: {
-          id: "#app",
+          id: "app",
         },
       },
       this.firstName
     );
   },
 };
+```
+
+**src/core/instance/proxy.js文件解析**
+
+判断`hasProxy`（判断当前浏览器支不支持`proxy`，`proxy`实际上是es6提供的API，实际作用就是对对象访问做一个劫持）,因为chrome支持`proxy`，所以会执行`vm._renderProxy = new Proxy(vm, handlers)`，`handlers`指向`hasHandler`。`hasHandler`是个判断，如果我们的元素不在`target`下，`has`为`false`，`isAllowed`是全局的属性和方法，在两个情况都不满足的条件下，执行`warnNonPresent`。`warnNonPresent`就是报警告。
+
+```javascript
+let initProxy
+
+if (process.env.NODE_ENV !== 'production') {
+  const allowedGlobals = makeMap(
+    'Infinity,undefined,NaN,isFinite,isNaN,' +
+    'parseFloat,parseInt,decodeURI,decodeURIComponent,encodeURI,encodeURIComponent,' +
+    'Math,Number,Date,Array,Object,Boolean,String,RegExp,Map,Set,JSON,Intl,BigInt,' +
+    'require' // for Webpack/Browserify
+  )
+
+  const warnNonPresent = (target, key) => {
+    warn(
+      `Property or method "${key}" is not defined on the instance but ` +
+      'referenced during render. Make sure that this property is reactive, ' +
+      'either in the data option, or for class-based components, by ' +
+      'initializing the property. ' +
+      'See: https://vuejs.org/v2/guide/reactivity.html#Declaring-Reactive-Properties.',
+      target
+    )
+  }
+
+  const warnReservedPrefix = (target, key) => {
+    warn(
+      `Property "${key}" must be accessed with "$data.${key}" because ` +
+      'properties starting with "$" or "_" are not proxied in the Vue instance to ' +
+      'prevent conflicts with Vue internals. ' +
+      'See: https://vuejs.org/v2/api/#data',
+      target
+    )
+  }
+
+  const hasProxy =
+    typeof Proxy !== 'undefined' && isNative(Proxy)
+
+  if (hasProxy) {
+    const isBuiltInModifier = makeMap('stop,prevent,self,ctrl,shift,alt,meta,exact')
+    config.keyCodes = new Proxy(config.keyCodes, {
+      set (target, key, value) {
+        if (isBuiltInModifier(key)) {
+          warn(`Avoid overwriting built-in modifier in config.keyCodes: .${key}`)
+          return false
+        } else {
+          target[key] = value
+          return true
+        }
+      }
+    })
+  }
+
+  const hasHandler = {
+    has (target, key) {
+      const has = key in target
+      const isAllowed = allowedGlobals(key) ||
+        (typeof key === 'string' && key.charAt(0) === '_' && !(key in target.$data))
+      if (!has && !isAllowed) {
+        if (key in target.$data) warnReservedPrefix(target, key)
+        else warnNonPresent(target, key)
+      }
+      return has || !isAllowed
+    }
+  }
+
+  const getHandler = {
+    get (target, key) {
+      if (typeof key === 'string' && !(key in target)) {
+        if (key in target.$data) warnReservedPrefix(target, key)
+        else warnNonPresent(target, key)
+      }
+      return target[key]
+    }
+  }
+
+  initProxy = function initProxy (vm) {
+    if (hasProxy) {
+      // determine which proxy handler to use
+      const options = vm.$options
+      const handlers = options.render && options.render._withStripped
+        ? getHandler
+        : hasHandler
+      vm._renderProxy = new Proxy(vm, handlers)
+    } else {
+      vm._renderProxy = vm
+    }
+  }
+}
+
+export { initProxy }
 ```
