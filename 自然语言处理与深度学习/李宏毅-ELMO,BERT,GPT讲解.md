@@ -1,0 +1,59 @@
+## 没有BERT之前：1-of-N Encoding-->Word Class-->Word Embedding
+
+### 1、1-of-N Encoding
+
+每一个词汇都当做一个不同的符号，每一个符号都用一个独特的编码表示，最常见的做法是1-of-N Encoding。即每个词汇都用一个不同的向量去描述。
+
+缺点：词汇和词汇之间没有任何关联，把每个词汇都当成一个独立的关系。
+
+![](./images/1-of-N.png)
+
+### 2、Word Class
+
+对词汇进行分类
+
+缺点：分类过于粗糙
+
+![](./images/word%20class.png)
+
+### 3、Word Embedding
+
+每个词汇都用向量来表示，向量的某个维度表示词汇的某个意思，语义相近的词汇向量比较接近。
+
+![](./images/word%20embedding.png)
+
+## ELMO
+
+#### 背景
+
+在过去的Word Embedding，所有不同的token，只要type是一样的，他们的语义就是一样的。但是事实并不是如此，不同的token就算是同样的type，也有可能有不同的意思。例如这里的bank应该有两种type，即两种不同的意思。
+
+![](./images/token%20type.png)
+
+#### ELMO模型
+
+搜集一大堆句子，训练RNN-base language models，学预测下一个token是什么，学完以后就有contextualized word embedding
+
+![](./images/ELMO1.png)
+
+正向考虑词汇前文，反向考虑词汇后文，将前后文的contextualized word embedding组合起来就可以得到一个比较准确的contextualized word embedding
+
+![](./images/正向反向ELMO.png)
+
+ELMO是一个词汇丢进去可以吐出不止一个embedding，每一层RNN都会给一个embedding，把这些embedding都加起来，公式是h1*α1+h2*α2=新的embedding，α1和α2是learn出来的，首先要决定做什么task，不同的任务α1和α2是不一样的。
+
+![](./images/ELMO2.png)
+
+## BERT
+
+BERT是Bidirectional Encoder Representation from Transformers的缩写，BERT是transformer的encoder。BERT里面只需要搜集一大堆的句子，不需要有annotation就可以把encoder给tran出来。总而言之，bert的功能就是一个句子丢进去给bert，然后每一个句子都会吐一个出来embedding出来就结束了。bert的Network架构是跟transformer的encoder架构是一样的，transformer的encoder里面有self-attention layer。self-attention layer就是input一个sequence也会out一个sequence。
+
+![](./images/BERT1.png)
+
+### 训练bert
+
+bert的network有两个训练的方法，第一个方法是Nasked LM。
+
+#### Nasked LM
+
+把输入的句子随机用

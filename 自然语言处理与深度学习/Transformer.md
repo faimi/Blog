@@ -1,0 +1,5 @@
+bert是unsupervise train的transformer，transformer是Seq2seq model，transformer特殊的地方就是在Seq2seq model中用到了大量的self-attention layer。
+
+## self-attention layer 做的是什么
+
+要处理一个sequence，最常想到要拿来用的network架构就是RNN，self-attention layer要做的事情就是取代RNN，他也是输入sequence输出一个sequence
