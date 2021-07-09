@@ -46,14 +46,32 @@ ELMO是一个词汇丢进去可以吐出不止一个embedding，每一层RNN都�
 
 ## BERT
 
-BERT是Bidirectional Encoder Representation from Transformers的缩写，BERT是transformer的encoder。BERT里面只需要搜集一大堆的句子，不需要有annotation就可以把encoder给tran出来。总而言之，bert的功能就是一个句子丢进去给bert，然后每一个句子都会吐一个出来embedding出来就结束了。bert的Network架构是跟transformer的encoder架构是一样的，transformer的encoder里面有self-attention layer。self-attention layer就是input一个sequence也会out一个sequence。
+BERT是Bidirectional Encoder Representation from Transformers的缩写，BERT是transformer的encoder。BERT里面只需要搜集一大堆的句子，不需要有annotation就可以把encoder给tran出来。总而言之，BERT的功能就是一个句子丢进去给BERT，然后每一个句子都会吐一个出来embedding出来就结束了。BERT的Network架构是跟transformer的encoder架构是一样的，transformer的encoder里面有self-attention layer。self-attention layer就是input一个sequence也会out一个sequence。
 
 ![](./images/BERT1.png)
 
-### 训练bert
+### 训练BERT
 
-bert的network有两个训练的方法，第一个方法是Nasked LM。
+BERT的network有两个训练的方法，第一个方法是Nasked LM，第二个方法是Next Sentence Prediction。
 
 #### Nasked LM
 
-把输入的句子随机用
+将输入的句子中的15%的词汇随机被置换成一个特殊的token，token叫做MASK。BERT要做的是猜测被盖住的地方到底应该是哪个词汇，BERT在训练的时候就是教她测漏字问题。
+
+问：BERT是怎么填回来的呢？
+答：假设输入句子的第二个词汇被挖空，接下来我们把每一个input token都通过BERT都会得到一个embedding。接下来把挖空的地方的embedding丢到Linear Multi-class Classifier里面，要求Classifier预测被MASK的词汇是哪一个词汇。因为Classifier是Linear的，所以能力非常弱，如果可以预测出来，那BERT这个model会很深，可能24层48层。BERT这个model一定要抽出一个很好的Representation，可以从这个Representation轻易知道现在被MASK的词汇是哪一个词汇。
+
+如果两个词填在一个地方没有违和感，那他们就有相似的embedding
+
+![](./images/MASK%20LM.png)
+
+### Next Sentence Prediction
+
+给BERT两个句子，BERT预测给的两个句子是接在一起的还是不是接在一起的。需要引入一个特别的token代表两个句子之间的boundary：[SEP]和放在句子开头代表从这里开始做Next Sentence Prediction这件事：[CLS]。从CLS出来的embedding放到Linear Multi-class Classifier里表示这两个句子是否接在一起，是的话是yes，不是的话是no。
+
+问：为什么CLS放在句子开头？
+答：BERT内部不是RNN，是transformer encoder，也就是self-attention，self-attention的特色是两个距离不管远近的word对他来说是一样的。
+
+#### 总结
+
+这两个方法在文献上是共同使用的
