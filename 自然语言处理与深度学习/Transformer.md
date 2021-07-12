@@ -1,4 +1,4 @@
-bert是unsupervise train的transformer，transformer是Seq2seq model（补），transformer特殊的地方就是在Seq2seq model中用到了大量的self-attention layer。
+BERT是unsupervise train的transformer，transformer是Seq2seq model（补），transformer特殊的地方就是在Seq2seq model中用到了大量的self-attention layer。
 
 ## self-attention layer 做的是什么
 
