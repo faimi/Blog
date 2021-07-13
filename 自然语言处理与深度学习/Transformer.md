@@ -32,7 +32,7 @@ input是x1-->x4这个sequence，每个input通过embedding变成a1-->a4再丢到
 
 ![](./images/self-attention公式2.png)
 
-拿新的α和对应的v去相乘再相加得到b1（可以在同一时间算出b2，b3等）。如果不想考虑整个sequence，只考虑a1，可以将产生出来的X变成0即可。这就是self-attention的妙用。
+拿新的α和对应的v去相乘再相加得到b1（可以在同一时间算出b2，b3等）。如果不想考虑整个sequence，只考虑a1，可以将产生出来的数变成0即可。这就是self-attention的妙用。
 
 ![](./images/self-attention公式3.png)
 
