@@ -62,3 +62,21 @@ input是x1-->x4这个sequence，每个input通过embedding变成a1-->a4再丢到
 qi,2也是一样。如果把bi,1和bi,2连起来，做transform，可以得到bi。
 
 ![](./images/muiti%20self-attention公式2.png)
+
+## transformer
+
+encoder的输入是中文的机器学习，decoder的输入先给一个`<BOS>`（这是一个token），然后输出一个machine，再把machine当输入，输出learning，直至输出句号。
+
+![](./images/transformer.png)
+
+### Encoder
+
+input通过input embedding变成一个vector，vector加上positional encoding进入灰色的block，灰色的block会重复N次，灰色的block里面第一层是Multi-Head Attention（输入一个sequence会得到另外一个sequence），下一个layer是Add&Norm（Add的意思是会把Multi-Head Attention的input和output加起来，例如会把input a和input b加起来得到b'，Norm是指把b'再做Layer Norm），Feed Forward会把每一个vector都进行处理，同时还有另外一个Add&Norm。
+
+![](./images/encoder.png)
+
+### Decoder
+
+decoder的input是它前一个timestep所产生的output，通过output embedding加上positional embedding进入灰色的block，灰色的block依旧会重复N次，第一层是Masked Multi-Head Attention（mask的意思是在做self-attention的时候这个decoder是会attend到已经产生出来的sequence），也一样又一个Add&Norm，接下来Multi-Head Attention是attend到之前encoder部分的输出，然后再做Add&Norm、Feed Forward和Add&Norm，再做Linear再做softmax得到最终的output
+
+![](./images/decoder.png)
