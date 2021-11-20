@@ -1,8 +1,8 @@
+# Vue.js 源码构建
 
+## Vue 用 Rollup 做构建
 
-## vue 用 Rollup 做构建
-
-[Rollup](https://github.com/rollup/rollup)和 webpack 一样都是构造工具，webpack 更强大，rollup 更适合 JavaScript 库的编译且更轻量，所以 js 选了 rollup 做构建
+[Rollup](https://github.com/rollup/rollup) 和 webpack 一样都是构建工具，webpack 更强大，rollup 更适合 JavaScript 库的编译且更轻量且代码更友好，所以 Vue.js 选了 rollup 做构建，它的构建相关配置都在 scripts 目录下。
 
 ## 构建代码
 
@@ -15,6 +15,7 @@ vue 发布在 npm 上，每个 npm 包（相当于一个项目）都需要一个
   "main": "dist/vue.runtime.common.js",
   "module": "dist/vue.runtime.esm.js",
   "scripts": {
+    // 构建相关的任务就是这三个， "build" 是build web平台的 Vue.js，"build ssr" 是输出跟 server renderer 相关，"build weex" 是跟 weex 相关
     "build": "node scripts/build.js",
     "build:ssr": "npm run build -- web-runtime-cjs,web-server-renderer",
     "build:weex": "npm run build -- weex",
@@ -24,11 +25,11 @@ vue 发布在 npm 上，每个 npm 包（相当于一个项目）都需要一个
 
 | 字段    | 含义                                                                                                                                            |
 | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| name    | 名字                                                                                                                                            |
+| name    | 名字，是唯一的                                                                                                                                            |
 | version | 版本                                                                                                                                            |
-| main    | 入口                                                                                                                                            |
-| module  | module和main非常类似，在webpack2以上是把module做默认入口                                                                                        |
-| scripts | scripts定义了很多脚本，每个脚本都是一个任务，通过npm run 值（dev，bulid）可以进行各种不同的脚本，"build"就相当于跑scripts文件夹夏的build.js文件 |
+| main    | npm 包入口， `import "vue"` 时会通过 main 查找入口                                                                                                                                            |
+| module  | module 和 main 非常类似，在 webpack2 以上是把 module 做默认入口，也可以说 Vue.js 的默认入口是 esm.js 文件                                                                                        |
+| scripts | npm 提供了 npm scripts ， scripts定义了很多脚本，每个脚本都是一个任务，通过 npm run 值（dev，bulid）可以进行各种不同的脚本执行不同的任务。|
 
 **1、build.js文件解析**
 
@@ -127,7 +128,7 @@ const builds = {
 
 入口：```resolve```函数接收一个参数，在这```base```取值```web```，```p.slice(base.length + 1)```返回```entry-runtime.js```
 
-目标：```base```取值```dist```，在alias.js里没有```dist```，于是直接返回当前目录的大目录，找到vue.runtime.common.dev.js文件
+目标：```base```取值```dist```，在alias.js里没有```dist```，于是直接返回当前目录的大目录，找到 vue.runtime.common.dev.js文件
 
 aliases具体看**3、alias.js文件解析**
 
