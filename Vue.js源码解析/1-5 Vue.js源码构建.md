@@ -103,26 +103,28 @@ function build (builds) {
 
 那么上述（2）配置是如何在config.js文件中拿到的的呢？
 
-因为在config.js文件底部暴露了一个方法```exports.getAllBuilds```，这是一个函数，通过```Object.keys(builds)```拿到一个```key```的数组，通过```map```方法调用```genConfig```函数
+因为在config.js文件底部暴露了一个方法`exports.getAllBuilds`，这是一个函数，通过`Object.keys(builds)`拿到一个`key`的数组，通过`map`方法调用`genConfig`函数
 
 ```javascript
 exports.getAllBuilds = () => Object.keys(builds).map(genConfig)
 ```
 
 > 1、Object.keys() 方法会返回一个由一个给定对象的自身可枚举属性组成的**数组**
+>
 > 2、枚举是指一一列举列
+>
 > 3、map的三个参数：数组元素，元素索引，原数组本身 `arr.map((currentValue,index,array)=>{})`
+
 
 （1）builds
 
 `builds`是一个对象，每个`key`对应一个对象，其实就是不同版本vue.js编译的配置
-
 `entry`：入口，通过`resolve`函数传字符串`web/entry-runtime.js`
 `dest`：目标
-`format`：文件格式，通过不同的```format```可以构建不同的版本
+`format`：文件格式，通过不同的`format`可以构建不同的版本
 `banner`：变量，定义注释
 
-所以最后以```entry-runtime.js```为编译入口，最后生成```vue.runtime.common.dev.js```文件
+所以最后以`entry-runtime.js`为编译入口，最后生成`vue.runtime.common.dev.js`文件
 
 ```javascript
 const builds = {
@@ -139,9 +141,9 @@ const builds = {
 
 （2）resolve
 
-入口：```resolve```函数接收一个参数，在这```base```取值```web```，```p.slice(base.length + 1)```返回```entry-runtime.js```
+入口：`resolve`函数接收一个参数，在这`base`取值`web`，`p.slice(base.length + 1)`返回`entry-runtime.js`
 
-目标：```base```取值```dist```，在alias.js里没有```dist```，于是直接返回当前目录的大目录，找到 vue.runtime.common.dev.js文件
+目标：`base`取值`dist`，在alias.js里没有`dist`，于是直接返回当前目录的大目录，找到 vue.runtime.common.dev.js文件
 
 aliases具体看**3、alias.js文件解析**
 
@@ -160,8 +162,8 @@ const resolve = p => {
 
 （3）genConfig
 
-```opts```：```genConfig```获取```key```，```opts```是```builds```中某个对象
-```config```：构造一个新的```config```对象，这个对象的数据结构才是真正的```rollup```对应的配置结构，```entry```只是我们自己定义的```entry```，所以要进行转换成```input```
+`opts`：`genConfig`获取`key`，`opts`是`builds`中某个对象
+`config`：构造一个新的`config`对象，这个对象的数据结构才是真正的`rollup`对应的配置结构，`entry`只是我们自己定义的`entry`，所以要进行转换成`input`
 
 ```javascript
 function genConfig (name) {
@@ -192,7 +194,7 @@ function genConfig (name) {
 
 **3、alias.js文件解析**
 
-alias.js文件最后导出一个对象，对象里有很多```key```，通过```resolve```函数返回字符串，字符串是一个目录，```path.resolve```是node.js提供的一个路径解析的方法，```__dirname```是指当前的目录，并往上去找一级，找到大目录，再传参数```p```
+alias.js文件最后导出一个对象，对象里有很多`key`，通过`resolve`函数返回字符串，字符串是一个目录，`path.resolve`是node.js提供的一个路径解析的方法，`__dirname`是指当前的目录，并往上去找一级，找到大目录，再传参数`p`
 
 因此alias.js文件是提供了一个到最终真实文件地址的一个映射关系
 
