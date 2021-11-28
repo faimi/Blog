@@ -28,4 +28,4 @@ src                 # 源码全在这下面
 
 ### compiler
 
-Vue 2.0 有一个很大的改进就是有了 Virtual Dom ,它的生成实际上是执行 render function ,但是我们用的时候很少写 render function ,一般都是 template 。 temple --> render function 其实它的相关逻辑是在 compiler 目录。
+Vue 2.0 有一个很大的改进就是有了 Virtual Dom ,它的生成实际上是执行 render function ,但是我们用的时候很少写 render function ,一般都是 template 。 **temple --> render function 其实它的相关逻辑是在 compiler 目录。**
