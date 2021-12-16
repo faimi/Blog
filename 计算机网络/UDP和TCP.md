@@ -3,7 +3,7 @@
  UDP ：用户数据报协议（User Datagram Protocol）
  TCP ：传输控制协议（Transmission Control Protocol）
 
- UDP 和  TCP 是** TCP /IP体系结构**运输层中的两个重要协议。在使用 TCP /IP体系结构的网络通信中，这两个协议的使用频率仅次于网际层的 IP 协议。 TCP /IP体系结构应用层的某些协议，需要使用运输层 TCP 提供的服务，而另一些协议需要使用运输层的 UDP 提供的服务。
+ UDP 和 TCP 是**TCP /IP体系结构**运输层中的两个重要协议。在使用 TCP /IP体系结构的网络通信中，这两个协议的使用频率仅次于网际层的 IP 协议。 TCP /IP体系结构应用层的某些协议，需要使用运输层 TCP 提供的服务，而另一些协议需要使用运输层的 UDP 提供的服务。
 
 <img src="./image/TCP%20IP体系结构.png" width="100%">
 
