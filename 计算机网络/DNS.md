@@ -13,8 +13,8 @@
 （2）当在浏览器地址栏中输入某个 Web 服务器的域名时，用户主机会首先在自己的 DNS 高速缓存中查找该域名所对应的 IP 地址。如果没有找到，则会向网络中的某台 DNS 服务器查询。 DNS 服务器中有域名和 IP 地址映射关系的数据库。当 DNS 服务器收到 DNS 查询报文后，在其数据库中进行查询，之后将查询结果发送给用户主机。用户主机中的浏览器就可以通过 Web 服务器的 IP 地址对其进行访问了。
 
 <div style="display:flex;">
-<img src="./image/未找到IP.png" style="flex:1;" width="30%">
-<img src="./image/查询DNS.png" style="flex:1;" width="30%">
+<img src="./image/未找到IP.png" style="flex:1;" width="50%">
+<img src="./image/查询DNS.png" style="flex:1;" width="50%">
 </div>
 
 问：因特网是否可以只是用一台 DNS 服务器？
