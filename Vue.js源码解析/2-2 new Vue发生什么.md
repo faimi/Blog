@@ -1,8 +1,15 @@
-**入口代码文件`src/core/instance/index`**
+关键词：
 
-vue实际上就是`function`实现的`class`，执行`new vue`的时候执行了`function`，然后执行`this._init`把`options`传入，`this._init`是一个vue原型上的方法，是在init.js中定义的
+# `new Vue`发生了什么
+
+从入口代码开始分析，`new Vue`背后发生了哪些事情。
+
+## 入口代码文件`src/core/instance/index.js`(Vue 定义)
+
+Vue 实际上就是`function`实现的`class`，执行`new Vue`的时候执行了`function`，然后执行`this._init`把`options`传入，`this._init`是一个 Vue 原型上的方法，是在`initMixin`，也就是`src/core/instance/init.js`中定义的。
 
 ```javascript
+// src/core/instance/index.js
 import { initMixin } from './init'
 import { stateMixin } from './state'
 
@@ -21,9 +28,14 @@ stateMixin(Vue)
 export default Vue
 ```
 
-**init.js文件解析**
+## src/core/instance/init.js文件解析
 
-`_init`方法做了很多初始化的工作，例如定义`uid`、合并`options`（通过`$options.el`访问到代码中定义的`el`）、初始化函数（生命周期、事件中心、`render`、`state`），初始化结束后判断`$options`有没有`el`，调用`$mount`进行挂载，字符串渲染到页面上
+在原型上定义了`_init`方法，也就是说走到了`initMixin(Vue)`时，执行了`_init`方法。
+
+`_init`方法做了很多初始化的工作，例如:
+1. 定义`uid`
+2. 合并`options`。将传入的`options` merge 到`$options`上，所以可以通过`$options.el`访问到代码中定义的`el`，通过`$options.data`访问到我们定义的`data`。
+3. 初始化函数（生命周期、事件中心、`render`、`state`），初始化结束后判断`$options`有没有`el`。调用`vm.$mount(vm.$options.el)`进行挂载，在页面上可以看到字符串渲染到页面上。`$mount`方法是整个做挂载的方法（是个重点）。
 
 ```javascript
 export function initMixin (Vue: Class<Component>) {
@@ -86,11 +98,10 @@ export function initMixin (Vue: Class<Component>) {
 }
 ```
 
-**state.js文件解析**
+## src/core/instance/state.js文件解析
 
-问：为什么可以在`mounted`里可以访问到`data`？
-
-答：在`initState`中，判断`options`，如果有`props`初始化`props`，定义了`methods`初始化`methods`，定义了`data`初始化`data`。
+问：为什么在`mounted(){console.log(this.message)}`可以访问到`message`？
+答：（1）初始化时有一个`initState`，这个函数是定义在`src/core/instance/state.js`中。在`initState()`中，判断`options`，如果定义`props`则初始化`props`，定义了`methods`初始化`methods`，定义了`data`初始化`data`。
 
 ```javascript
 export function initState (vm: Component) {
@@ -110,7 +121,7 @@ export function initState (vm: Component) {
 }
 ```
 
-在`initData`中，从`$options.data`中拿到`data`，判断他是不是一个`function`（正常`data`是一个函数），在`getData`中`call`一下这个方法，返回对象，赋值给`vm._data`，如果不是对象就会报警告。然后拿到对象的`key`、`props`、`methods`并进行对比，判断是否重名，然后用```proxy(vm,`_data`,key)```实现。
+（2）在`initData`中，从`$options.data`中拿到`data`，就是我们定义的`data(){return {message:'Hello Vue!'}}`。然后判断`data`是不是一个`function`（正常`data`是一个函数而不是对象），是函数则调用`getData`。`getData`中调用`call`方法，返回对象，赋值给`vm._data`和`data`，如果不是对象就会报警告。然后拿到对象的`key`、`props`、`methods`并进行对比，判断是否重名。为什么不能重名？因为他们最终都挂载到vm上，也就是当前实例上。实现是用```proxy(vm,`_data`,key)```实现。
 
 ```javascript
 function initData (vm: Component) {
@@ -121,7 +132,7 @@ function initData (vm: Component) {
   if (!isPlainObject(data)) {
     data = {}
     process.env.NODE_ENV !== 'production' && warn(
-      'data functions should return an object:\n' +
+      'data functions should return an object:/n' +
       'https://vuejs.org/v2/guide/components.html#data-Must-Be-a-Function',
       vm
     )
@@ -169,7 +180,7 @@ export function getData (data: Function, vm: Component): any {
 }
 ```
 
-`proxy`通过`sharedPropertyDefinition`对象定义了`get`和`set`两个函数，运行`Object.defineProperty(target, key, sharedPropertyDefinition)`方法代理了`target`和 `key`，就是对`target`和 `key`做了一层访问`get`和`set`，`target`就是`vm`，`sourceKey`就是`_data`，所以访问`vm.msg`实际上就会访问`vm._data.msg`
+（3）`proxy`通过`sharedPropertyDefinition`对象定义了`get`和`set`两个函数，运行`Object.defineProperty(target, key, sharedPropertyDefinition)`方法代理了`target`和`key`，就是对`target`和`key`做了一层访问`get`和`set`，`target`就是`vm`，`vm.key`的`get`会执行`return this[sourceKey][key]`。会执行`sourceKey`就是`_data`，所以访问`vm.msg`实际上就会访问`vm._data.msg`
 
 ```javascript
 const sharedPropertyDefinition = {
