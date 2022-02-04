@@ -1,10 +1,16 @@
+问题：`src/core/instance/init.js`的`$mount`是从哪来的？
 
-也就是执行`vm.$mount`方法
-以Runtime + Compiler版的vue.js为例，所以入口文件为`src\platforms\web\entry-runtime-with-compiler.js`
+关键词：
 
-**src\platforms\web\entry-runtime-with-compiler.js文件解析**
+# Vue实例挂载的实现
 
-（1）先获得原型上的`$mount`方法，用变量`mount`进行缓存，然后再重新定义`$mount`，`Vue.prototype.$mount`方法是在`./runtime/index`文件下定义的，`src\core\instance\init.js`下的`vm.$mount(vm.$options.el)`中的`$mount`调用的是`src\platforms\web\entry-runtime-with-compiler.js`的`$mount`函数
+也就是执行`vm.$mount`方法做了那些事情。
+
+以Runtime + Compiler版的vue.js为例，所以入口文件为`src/platforms/web/entry-runtime-with-compiler.js`
+
+**src/platforms/web/entry-runtime-with-compiler.js文件解析**
+
+（1）先获得原型上的`$mount`方法，用变量`mount`进行缓存，然后再重新定义`$mount`，`Vue.prototype.$mount`方法是在`./runtime/index`文件下定义的，`src/core/instance/init.js`下的`vm.$mount(vm.$options.el)`中的`$mount`调用的是`src/platforms/web/entry-runtime-with-compiler.js`的`$mount`函数
 
 问：为什么要重新定义一遍？
 答：因为Runtime版本不需要Runtime + Compiler版本的逻辑

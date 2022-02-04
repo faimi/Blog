@@ -1,4 +1,4 @@
-关键词：
+关键词：当执行`new Vue`时，实际上是执行了`_init`方法。`_init`方法会做一堆初始化工作，首先是对`options`的合并，然后是一系列 init 方法，对`data`进行`proxy`处理和响应式处理`observe`，最后调用`$mount`做挂载。
 
 # `new Vue`发生了什么
 
@@ -33,6 +33,7 @@ export default Vue
 在原型上定义了`_init`方法，也就是说走到了`initMixin(Vue)`时，执行了`_init`方法。
 
 `_init`方法做了很多初始化的工作，例如:
+
 1. 定义`uid`
 2. 合并`options`。将传入的`options` merge 到`$options`上，所以可以通过`$options.el`访问到代码中定义的`el`，通过`$options.data`访问到我们定义的`data`。
 3. 初始化函数（生命周期、事件中心、`render`、`state`），初始化结束后判断`$options`有没有`el`。调用`vm.$mount(vm.$options.el)`进行挂载，在页面上可以看到字符串渲染到页面上。`$mount`方法是整个做挂载的方法（是个重点）。
@@ -180,16 +181,10 @@ export function getData (data: Function, vm: Component): any {
 }
 ```
 
-（3）`proxy`通过`sharedPropertyDefinition`对象定义了`get`和`set`两个函数，运行`Object.defineProperty(target, key, sharedPropertyDefinition)`方法代理了`target`和`key`，就是对`target`和`key`做了一层访问`get`和`set`，`target`就是`vm`，`vm.key`的`get`会执行`return this[sourceKey][key]`。会执行`sourceKey`就是`_data`，所以访问`vm.msg`实际上就会访问`vm._data.msg`
+（3）`proxy`通过`sharedPropertyDefinition`对象定义了`get`和`set`两个函数，运行`Object.defineProperty(target, key, sharedPropertyDefinition)`方法代理了`target`和`key`，就是对`target`和`key`做了一层访问`get`和`set`，`target`就是`vm`。`vm.key`的`get`会执行`return this[sourceKey][key]`，也就是说访问`vm.key`就是会访问`this[sourceKey][key]`。`sourceKey`就是传入`_data`，所以访问`vm.message`实际上就会访问`vm._data.message`，即`mounted(){console.log(this.message);console.log(this._data.message)}`。
 
 ```javascript
-const sharedPropertyDefinition = {
-  enumerable: true,
-  configurable: true,
-  get: noop,
-  set: noop
-}
-
+// 根据上面 proxy(vm, `_data`, key)，就是把`_data`作为sourceKey传入。
 export function proxy (target: Object, sourceKey: string, key: string) {
   sharedPropertyDefinition.get = function proxyGetter () {
     return this[sourceKey][key]
