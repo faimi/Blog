@@ -3,7 +3,7 @@
 
 # Flow
 
-Flow 是 JavaScript 静态类型检查工具，可以让 vue 拥有检查静态类型的能力，可以看[官网链接](https://flow.org/en/docs/getting-started/)系统的学习
+Flow 是 JavaScript 静态类型检查工具，可以让 Vue 拥有检查静态类型的能力，可以看[官网链接](https://flow.org/en/docs/getting-started/)系统的学习
 
 ## 为什么要用 Flow
 
