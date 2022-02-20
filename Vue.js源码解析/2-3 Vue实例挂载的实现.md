@@ -1,6 +1,6 @@
 问题：`src/core/instance/init.js`的`$mount`是从哪来的？
 
-关键词：$mount、el、render
+关键词：$mount、el、render、template
 
 # Vue实例挂载的实现
 
@@ -136,9 +136,9 @@ console.log(d); // #app
 
 3）拿到`$options`，判断有没有定义`render`方法，然后判断有没有写`template`，如果`template`是字符串类型则对`template`进行处理，如果`template`是一个 DOM 对象的话，就拿`template`的`innerHTML`，如果`template`不是以上两种类型就会有警告；没有`template`就会拿到`el`并调用`getOuterHTML`方法。
 
-`getOuterHTML`方法拿到`el`的`outerHTML`,如果有就直接返回，否则在`el.outerHTML`外包一层`div`，再执行`innerHTML`，返回字符串。然后就是编译过程了。
+`getOuterHTML`方法拿到`el`的`outerHTML`,如果有就直接返回，否则在`el.outerHTML`外包一层`div`，再执行`innerHTML`，返回字符串。然后就是编译过程了。此时`template`是`"<div id="app">{{ message }}</div>"`（字符串类型）
 
-4）总而言之，先对`el`做解析，判断`render function`，没有`render`则转换成`template`，`template`最终会编译成`render`。也就是说 Vue 只认`render`函数。如果有`render`函数直接调用`mount`方法，这个`mount`方法是之前缓存的`$mount`，因此又回到了`src/platforms/web/util/index.js`文件中，在该文件中调用`mountComponent`方法。`mountComponent`方法来自`src/core/instance/lifecycle.js`文件。
+4）总而言之，**先对`el`做解析，判断`render function`，没有`render`则转换成`template`，`template`最终会编译成`render`**。也就是说 Vue 只认`render`函数。如果有`render`函数直接调用`mount`方法，这个`mount`方法是之前缓存的`$mount`，因此又回到了`src/platforms/web/util/index.js`文件中，在该文件中调用`mountComponent`方法。`mountComponent`方法来自`src/core/instance/lifecycle.js`文件。
 
 在`src/core/instance/lifecycle.js`文件中，将`el`（DOM）缓存到`vm.$el`，然后判断有没有`render`函数，没有`render`函数并且`template`没有准确转换成`render`函数，则创建一个`createEmptyVNode`（空 VNode ），开发环境会报警告。在用 runtime-only 版本，又写了`template options render`函数，就会报这个警告。还有就是写了`template`，但是没用这个编译版本，所以不会生成`render`函数，也会报错。还有一种情况是没用写`template`和`render`函数，会报下面的警告。总的来说就是没正确生成`render`函数。
 
