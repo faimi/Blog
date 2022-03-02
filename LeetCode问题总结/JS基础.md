@@ -14,8 +14,7 @@ Math.pow(10,i)
 方法1：**parseInt()**
 
 ```javascript
-# 2
-parseInt(5/2);
+parseInt(5/2); //2
 ```
 
 方法2：**Math.floor()**
@@ -23,8 +22,7 @@ parseInt(5/2);
 返回小于等于x的最大整数
 
 ```javascript
-# 1
-Math.floor(1.6);
+Math.floor(1.6); //1
 ```
 
 2、连接两个数组
@@ -35,8 +33,7 @@ Math.floor(1.6);
 let a = [1, 2, 3];
 let b = [0];
 
-# [1,2,3,0]
-console.log(a.concat(b))
+console.log(a.concat(b)) // [1,2,3,0]
 ```
 
 方法2：**[...arr1,...arr2]**
@@ -45,7 +42,7 @@ console.log(a.concat(b))
 let a = [1, 6];
 let b = [0];
 let numList = [...a, ...b]
-console.log(numList)
+console.log(numList) // [1, 6, 0]
 ```
 
 ## 5 替换空格
@@ -56,10 +53,15 @@ replace()：
 `g`表示全局匹配将替换所有匹配的子串，如果不加`g`当匹配到第一个后就结束了
 
 ```javascript
-s.replace(/\s/g, '%20');
-// 等价于
-s.replaceAll(" ", '%20');
+let s = "We are happy.";
+s.replace(/\s/g, '%20'); // We%20are%20happy.
+# 等价于
+s.replaceAll(" ", '%20'); // We%20are%20happy.
 ```
+
+## 6 从尾到头打印链表
+
+unshift() 方法将新项添加到数组的开头，并返回新的长度。
 
 ## 11 盛最多水的容器
 
@@ -69,17 +71,18 @@ s.replaceAll(" ", '%20');
 let height = [1, 8, 6, 2, 5, 4, 8, 3, 7]
 let heightSort = height;
 heightSort.sort((a, b) => b - a);
-# [8, 8, 7, 6, 5, 4, 3, 2, 1] [8, 8, 7, 6, 5, 4, 3, 2, 1]
-console.log(heightSort,height)
+console.log(heightSort,height) // [8, 8, 7, 6, 5, 4, 3, 2, 1] [8, 8, 7, 6, 5, 4, 3, 2, 1]
 ```
 
 解决办法：
+
+slice(0)：对原数组进行深拷贝，这样进行一系列操作的时候就不影响原数组了
+
 ```javascript
 let height = [1, 8, 6, 2, 5, 4, 8, 3, 7]
 let heightSort = height.slice(0);
 heightSort.sort((a, b) => b - a);
-# [8, 8, 7, 6, 5, 4, 3, 2, 1] [1, 8, 6, 2, 5, 4, 8, 3, 7]
-console.log(heightSort,height)
+console.log(heightSort,height) // [8, 8, 7, 6, 5, 4, 3, 2, 1] [1, 8, 6, 2, 5, 4, 8, 3, 7]
 ```
 
 ## 13 罗马数字转整数
@@ -102,7 +105,7 @@ if (s[i + 1] == 'V') {
 
 1、关于break退出循环
 
-```javascript
+```c++
 for (int i = 0; i < 10; i++) {
     if (i == 3) {
       break;
@@ -117,15 +120,34 @@ for (int i = 0; i < 10; i++) {
 
 3、continue
 
-```javascript
+```c++
 for i in range(5):
     执行语句
     continue   #结束本次循环，进行下次循环 
 ```
 
+## 15 二进制中1的个数
+
+toString()：把数字转换为字符串。例如，当参数为2时，会被转换为二进制值表示的字符串。
+
+```javascript
+let n = 15;
+console.log(n.toString(2)) // 1111
+console.log(n.toString(2).split("1")) // ["","","","",""]
+```
+
+match()：可在字符串内检索指定的值，或找到一个或多个正则表达式的匹配。
+
+```javascript
+let n = 15;
+console.log(n.toString(2).match(/1/g)) // ["1", "1", "1", "1"]
+```
+
 ## 26 删除有序数组中的重复项
 
-最主要的原因在于 splice 会动态更改数组长度，所以一直不对
+最主要的原因在于 splice 会动态更改数组长度，所以一直不对。
+
+splice() 方法向/从数组添加/删除项目，并**返回删除的项目**。
 
 ## 27 移除元素
 
@@ -143,15 +165,13 @@ trim() 方法用于删除字符串的头尾空白符。
 
 ```javascript
 let str = "   fly me   to   the moon  ";
-console.log(str.trim());
-//fly me   to   the moon
+console.log(str.trim()); // fly me   to   the moon
 ```
 
 split() 方法用于把一个字符串分割成字符串数组。
 
 ```javascript
 let str="How are you doing today?";
-console.log(str.split(" "));
-// [How,are,you,doing,today?]
+console.log(str.split(" ")); // [How,are,you,doing,today?]
 ```
 
