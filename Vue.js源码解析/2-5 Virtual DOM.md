@@ -12,7 +12,6 @@ Virtual DOM 就是用一个原生的 JS 对象去描述一个 DOM 节点，所�
 
 ![](./image/DOM.png)
 
-
 ### Vue.js 中 Virtual DOM 的 VNode 的定义
 
 #### src/core/vdom/vnode.js文件解析
