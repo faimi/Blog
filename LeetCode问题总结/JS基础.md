@@ -175,3 +175,35 @@ let str="How are you doing today?";
 console.log(str.split(" ")); // [How,are,you,doing,today?]
 ```
 
+## 58.II 左旋转字符串
+
+substr()：能够根据指定长度来截取子字符串。它包含两个参数，第一个参数表示准备截取的子字符串起始下标（包括），第二个参数表示截取的长度。
+
+```javascript
+let s = "lrloseumgh",
+	k = 2;
+console.log(s.substr(k)); // loseumgh
+console.log(s.substr(k,3)); // los
+console.log(s.slice(4,1)); // s
+console.log(s); // lrloseumgh
+```
+
+slice() 和 substring()：都是根据指定的起止下标位置来截取字符串，它们都可以包含两个参数，第一个参数表示起始下标（包括），第二个参数表示结束下标（不包括）。如果第一个参数值比第二个参数值大，substring() 方法能够在执行截取之前先交换两个参数，而对于 slice() 方法来说，则被无视为无效，并返回空字符串。
+
+```javascript
+let s = "lrloseumgh",
+	k = 2;
+console.log(s.slice(k)); // loseumgh
+console.log(s.slice(k,3)); // l
+console.log(s.slice(4,1)); // ""
+console.log(s); // lrloseumgh
+```
+
+```javascript
+let s = "lrloseumgh",
+	k = 2;
+console.log(s.substring(k)); // loseumgh
+console.log(s.substring(k,3)); // l
+console.log(s.substring(4,1)); // rlo
+console.log(s); // lrloseumgh
+```
