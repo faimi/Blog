@@ -2,6 +2,8 @@
 
 关键词：`vm.$createElement`、`vm._renderProxy`、`VNode`
 
+逻辑：`vm._render`最终是通过执行`createElement`方法并返回的是`vnode`。
+
 `src/core/instance/lifecycle.js`文件运行的`vm._render()`定义在`src/core/instance/render.js`文件中。
 
 ## src/core/instance/render.js文件解析

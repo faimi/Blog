@@ -1,6 +1,8 @@
 问题：`src/core/instance/init.js`的`$mount`是从哪来的？
 
-关键词：$mount、el、render、template
+关键词：`$mount`、`el`、`render`、`template`
+
+逻辑：`mountComponent`会完成整个渲染工作，最核心的2个方法：`vm._render`和`vm._update`。
 
 # Vue实例挂载的实现
 

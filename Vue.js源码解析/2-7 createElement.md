@@ -1,6 +1,8 @@
 # createElement
 
-关键词：VNode 的创建过程
+关键词：
+
+逻辑：回到`mountComponent`函数的过程，至此已经知道`vm._render`是如何创建了一个`VNode`，接下来就是要把这个 VNode 渲染成一个真实的`DOM`并渲染出来，这个过程是通过`vm._update`完成的，接下来分析一下这个过程。
 
 Vue.js 利用`createElement`方法创建`VNode`，它定义在`src/core/vdom/create-element.js`中：
 
@@ -8,7 +10,7 @@ Vue.js 利用`createElement`方法创建`VNode`，它定义在`src/core/vdom/cre
 
 ### createElement()
 
-`createElement`的定义支持六个参数，第一个参数`context`是`vm`实例，第二个`tag`是`VNode`标签，第三个`data`是跟`VNode`相关的数据，第四个`children`是`VNode`的子节点，有`children`才能构造成`VNode tree`，可以完美映射到`DOM Tree`。
+`createElement`的定义支持六个参数，第一个参数`context`是`vm`实例，第二个`tag`是`VNode`标签（`tag: "div"`），第三个`data`是跟`VNode`相关的数据，第四个`children`是`VNode`的子节点（`children: [VNode]`），有`children`才能构造成`VNode tree`，可以完美映射到`DOM Tree`。
 
 进行参数重载，检测参数，是对参数个数不一致的处理。如果没有`data`，就会把后面的参数往前移动。
 
@@ -40,11 +42,13 @@ export function createElement (
 
 ### _createElement()函数
 
-（1）`_createElement`方法有5个参数，`context`表示`VNode`的上下文环境，它是`Component`类型；`tag`表示标签，它可以是一个字符串，也可以是一个`Component`；`data`表示`VNode`的数据，它是一个`VNodeData`类型，可以在`flow/vnode.js`中找到它的定义，这里先不展开说；`children`表示当前`VNode`的子节点，它是任意类型的，它接下来需要被规范为标准的`VNode`数组；`normalizationType`表示子节点规范的类型，类型不同规范的方法也就不一样，它主要是参考`render`函数是编译生成的还是用户手写的。
+`_createElement`函数的流程略微有点多，我们接下来主要分析 2 个重点的流程 —— `children`的规范化以及`VNode`的创建。
 
-`_createElement`对`data`进行校验，`data`不能是个响应式的（有`__ob__`属性代表是响应式的），否则报警告“ VNode data 不能是响应式的 ”。然后调用`createEmptyVNode`函数。
+`_createElement`方法有5个参数，`context`表示`VNode`的上下文环境，它是`Component`类型；`tag`表示标签，它可以是一个字符串，也可以是一个`Component`；`data`表示`VNode`的数据，它是一个`VNodeData`类型，可以在`flow/vnode.js`中找到它的定义，这里先不展开说；`children`表示当前`VNode`的子节点，它是任意类型的，它接下来需要被规范为**标准的`VNode`数组**；`normalizationType`表示子节点规范的类型，类型不同规范的方法也就不一样，它主要是参考`render`函数是**编译生成**的还是**用户手写**的。
 
-`createEmptyVNode`方法定义在`src/core/vdom/vnode.js`文件中，即简单创建VNode实例，什么参数都不传，可以理解为是一个注释节点。
+`_createElement`对`data`进行校验，`data`不能是响应式的（有`__ob__`属性代表是响应式的），否则报警告“ VNode data 不能是响应式的 ”。然后调用`createEmptyVNode`函数。
+
+`createEmptyVNode`方法定义在`src/core/vdom/vnode.js`文件中，即简单创建`VNode`实例，什么参数都不传，可以理解为是一个注释节点。
 
 ```javascript
 // src/core/vdom/vnode.js
@@ -56,11 +60,13 @@ export const createEmptyVNode = (text: string = '') => {
 }
 ```
 
-判断`data.is`，如果`component :is`不是一个真值，也是返回一个注释节点。
+判断`data`和`data.is`，如果`component :is`不是一个真值，也是返回一个注释节点。
 
 对`data`参数，例如`key`不是基础类型则报错。
 
-（2）【重点】对`children`做`normalizeChildren`。当手写render函数时，对第三个参数传了`this.message`，那是一个普通的值，但是实际上`children`应该是个数组，而且每个数组都是`VNode`。`normalizeChildren`和`simpleNormalizeChildren`函数来自`src/core/vdom/helpers/normalize-children.js`文件。
+#### `children`的规范化
+
+对`children`做`normalizeChildren`。当手写render函数时，对第三个参数传了`this.message`，那是一个普通的值，但是实际上`children`应该是个数组，而且每个数组都是`VNode`。`normalizeChildren`和`simpleNormalizeChildren`函数来自`src/core/vdom/helpers/normalize-children.js`文件。
 
 `simpleNormalizeChildren`对`children`进行了一层遍历。`children`是个类数组，遍历发现如果有元素是数组，就调用`Array.prototype.concat.apply()`方法把`children`拍平，就是让嵌套数组成为一维数组（是因为存在`functional component`函数式组件返回的是一个数组而不是一个根节点）。最终的期望就是`children`是个一维数组，每个都是一个`VNode`。
 
@@ -77,7 +83,8 @@ export const createEmptyVNode = (text: string = '') => {
 
 `normalizeChildren`最终目标也是返回一个一维的数组，每个都是`VNode`。首先判断是否是个基础类型，是的话直接返回一维数组，数组长度为1，`createTextVNode`实例化一个`VNode`，前三个参数是`undefined`，第四个参数是个`string`，是返回一个文本`VNode`；不是基础类型则判断是否是`Array`类型，是的话调用`normalizeArrayChildren`方法，否则返回`undefined`。
 
-`normalizeArrayChildren`返回的是数组。遍历`children`，如果`children`是`Array`数组，
+`normalizeArrayChildren`返回的是`res`数组。遍历`children`，如果`children[i]`是`Array`数组（可能多层嵌套，例如编译`slot`、`v-for`的时候会产生嵌套数组的情况），递归调用`normalizeArrayChildren`，做个优化（如果第一个节点和最后一个节点都是文本，则把这两个合并在一起），再做一层`push`；如果是基础类型，判断是否是文本节点，是的话`createTextVNode`合并，不是的话直接`push`；如果是`VNode`，例如`v-for`，则进行处理再push。最终返回`res`。
+`normalizeArrayChildren`主要是递归和合并。经过对`children`的规范化，`children`变成了一个类型为`VNode`的`Array`。
 
 ```javascript
 // src/core/vdom/helpers/normalize-children.js
@@ -146,6 +153,10 @@ function normalizeArrayChildren (children: any, nestedIndex?: string): Array<VNo
   return res
 }
 ```
+
+#### VNode 的创建
+
+对`tag`进行判断，是个`string`还是组件。如果是`string`，判断是不是 HTML 原生保留标签。如果是则创建一个普通的保留标签，然后直接创建一个普通`VNode`。这个`VNode`就是`render`函数返回的`VNode`。
 
 ```javascript
 // src/core/vdom/create-element.js
@@ -240,4 +251,3 @@ export function _createElement (
   }
 }
 ```
-
