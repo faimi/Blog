@@ -246,7 +246,7 @@ s.toLocaleLowerCase()
 ```javascript
 s = "A man, a plan, a canal: Panama"
 const str = s.toLocaleLowerCase().replace(/[\W_]/ig, '') // amanaplanacanalpanama
-str=str=(s.replace(/[^0-9a-zA-Z]/ig,"")).toLowerCase() // amanaplanacanalpanama
+const str=(s.replace(/[^0-9a-zA-Z]/ig,"")).toLowerCase() // amanaplanacanalpanama
 ```
 （2）match
 
