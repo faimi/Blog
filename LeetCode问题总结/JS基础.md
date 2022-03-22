@@ -97,6 +97,7 @@ numbers.sort((a,b)=>a-b);
 
 二分法？？？
 不能两个都+1（最后返回值定不下），也不能两个都不加（死循环），只要有一个+1就行
+high--是因为小的在前面
 
 ## 13 罗马数字转整数
 
@@ -225,4 +226,52 @@ console.log(s.substring(k)); // loseumgh
 console.log(s.substring(k,3)); // l
 console.log(s.substring(4,1)); // rlo
 console.log(s); // lrloseumgh
+```
+
+## 125 验证回文串
+
+三种经典方法（reverse+双指针+栈（从中间开始））
+
+字符串直接赋值不成功
+
+大写转小写：
+```javascript
+s.toLocaleLowerCase()
+```
+
+正则表达式：
+
+（1）replace
+
+```javascript
+s = "A man, a plan, a canal: Panama"
+const str = s.toLocaleLowerCase().replace(/[\W_]/ig, '') // amanaplanacanalpanama
+const str=(s.replace(/[^0-9a-zA-Z]/ig,"")).toLowerCase() // amanaplanacanalpanama
+```
+（2）match
+
+```javascript
+const str = s.toLocaleLowerCase().match(/[a-z0-9]+/g) // ["a", "man", "a", "plan", "a", "canal", "panama"]
+```
+（3）test
+```javascript
+for (let i = 0; i < s.length; i++) {
+	if (/[a-zA-Z0-9]/.test(s[i])) {
+		console.log(/[a-zA-Z0-9]/.test(s[i])) // 21次 true
+	}
+}
+```
+
+reverse：
+
+```javascript
+var isPalindrome = function(s) {
+    let valid = s.toLowerCase().match(/[a-z0-9]+/g); // ["a", "man", "a", "plan", "a", "canal", "panama"]
+    if(!valid){
+        return true;
+    }
+    let str = valid.join(""); // amanaplanacanalpanama
+    let comp = str.split("").reverse().join(""); // amanaplanacanalpanama
+    return comp === str;
+};
 ```
