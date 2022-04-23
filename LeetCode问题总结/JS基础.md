@@ -99,6 +99,20 @@ numbers.sort((a,b)=>a-b);
 不能两个都+1（最后返回值定不下），也不能两个都不加（死循环），只要有一个+1就行
 high--是因为小的在前面
 
+## 11 盛最多水的容器
+
+Math.max
+
+```javascript
+max = Math.max(max,minHeight*(right-left+1));
+```
+
+Math.min
+
+```javascript
+let minHeight = Math.min(height[left], height[right]);
+```
+
 ## 13 罗马数字转整数
 
 1、 在进行 if 判断时，不要先判断不等于，要先判断等于，否则会出错
@@ -157,6 +171,15 @@ let n = 15;
 console.log(n.toString(2).match(/1/g)) // ["1", "1", "1", "1"]
 ```
 
+## 21 调整数组顺序使奇数位于偶数前面
+
+concat()：用于连接两个或多个数组。此方法返回一个新数组，不改变原来的数组。
+
+```javascript
+let a = [1,2,3],b = [4,5];
+console.log(a.concat(b));// [1,2,3,4,5]
+```
+
 ## 26 删除有序数组中的重复项
 
 最主要的原因在于 splice 会动态更改数组长度，所以一直不对。
@@ -170,6 +193,18 @@ for循环失败，while会成功
 ## 28 实现 strStr()
 
 indexOf() 方法可返回某个指定的字符串值在字符串中首次出现的位置。
+
+## 34 在排序数组中查找元素的第一个和最后一个位置
+
+（1）
+∵mid = (left + right) / 2 容易溢出！因为 left+right 很容易超过 int 范围！而mid = left + (right - left) / 2 不容易溢出，所以建议以后写二分时要用mid = left + (right - left) / 2
+
+又∵mid=(left+right)>>1 相当于 mid=(left+right)/2
+
+总结：mid = ((right - left) >> 1) + left;
+
+（2）
+lastIndexOf() 方法可返回一个指定的字符串值最后出现的位置，在一个字符串中的指定位置从后向前搜索。
 
 ## 42 连续子数组的最大和
 
