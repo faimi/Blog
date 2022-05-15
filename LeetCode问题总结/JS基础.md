@@ -212,6 +212,27 @@ lastIndexOf() 方法可返回一个指定的字符串值最后出现的位置，
 
 【要点】加上当前元素只会对最终数组和起减少的作用，而不是增大数组和，所以就直接以当前元素为起点新起数组求最大数组和
 
+## 49 字母异位词分组
+
+（1）
+split()：把字符串拆成数组
+join()：把数组中的所有元素放⼊⼀个字符串
+
+```javascript
+strs = ["eat", "tea", "tan", "ate", "nat", "bat"];
+let str = strs[0].split('').sort().join();
+```
+
+（2）
+```javascript
+for(const word of strs) {}
+```
+
+```javascript
+for(let i=0; i<strs.length; i++) {}
+```
+
+这两种都是可行的，但是反过来`const i of strs.length`是不行的
 ## 58 最后一个单词的长度
 
 substring 不会改变原字符串

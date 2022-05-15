@@ -1,3 +1,24 @@
+## 49 字母异位词分组
+
+map也可以用数组存储，如何push
+
+```javascript
+for (let i = 0; i < strs.length; i++) {
+	if (map.get(tempStr[i])) {
+		map.get(tempStr[i]).push(strs[i]);
+	} else {
+		map.set(tempStr[i], [strs[i]])
+	}
+}
+```
+
+map.values()：返回Map对象的所有值
+Array.from()：将对象转换为数组
+
+```javascript
+Array.from(map.values()) // [["eat", "tea", "ate"], ["tan", "nat"], ["bat"]]
+```
+
 ## 229 求众数 II
 
 1、 Map
@@ -40,6 +61,7 @@ for (let i = 0; i < len; i++) {
 }
 console.log(map) //Map(3) {1 => 3, 3 => 2, 2 => 3}
 ```
+
 
 ## 594 最长和谐子序列
 

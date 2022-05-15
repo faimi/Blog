@@ -1,10 +1,12 @@
 关键词：看住`build.js`文件 定义依赖 拿到配置 进行筛选 进行构建
 
+涉及到的文件：
+
 # Vue.js 源码构建
 
 ## Vue 用 Rollup 做构建
 
-[Rollup](https://github.com/rollup/rollup) 和 webpack 一样都是构建工具，webpack 更强大，rollup 更适合 JavaScript 库的编译且更轻量且代码更友好，所以 Vue.js 选了 rollup 做构建，它的构建相关配置都在 scripts 目录下。
+[Rollup](https://github.com/rollup/rollup) 和 webpack 一样都是构建工具，webpack 更强大，可以把图片、 js 等都编译成 JavaScript ，rollup 更适合 JavaScript 库的编译，只处理 js 部分，所以更轻量且代码更友好，所以 Vue.js 选了 rollup 做构建，它的构建相关配置都在 scripts 目录下。
 
 ## 构建脚本
 
