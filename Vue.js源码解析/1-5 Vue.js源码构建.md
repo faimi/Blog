@@ -1,8 +1,10 @@
+# Vue.js 源码构建
+
+主题：讲清楚 package.json 文件下的 scripts 的三个 build 是如何生成 dist 文件下的多版本 Vue
+
 关键词：看住`build.js`文件 定义依赖 拿到配置 进行筛选 进行构建
 
 涉及到的文件：
-
-# Vue.js 源码构建
 
 ## Vue 用 Rollup 做构建
 
