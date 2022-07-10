@@ -1,4 +1,4 @@
-关键词：当执行`new Vue`时，实际上是执行了`_init`方法。`_init`方法会做一堆初始化工作，首先是对`options`的合并，然后是一系列 init 方法，对`data`进行`proxy`处理和响应式处理`observe`，最后调用`$mount`做挂载。
+关键词：当执行`new Vue`时，实际上是执行了`_init`方法。`_init`方法会做一堆初始化工作，首先是对`options`的合并，然后是一系列 init 方法，在`initData`方法中对`data`进行`proxy`处理和响应式处理`observe`，最后调用`$mount`做挂载。
 
 # `new Vue`发生了什么
 
@@ -6,7 +6,7 @@
 
 ## 入口代码文件`src/core/instance/index.js`(Vue 定义)
 
-Vue 实际上就是`function`实现的`class`，执行`new Vue`的时候执行了`function`，然后执行`this._init`把`options`传入，`this._init`是一个 Vue 原型上的方法，是在`initMixin`，也就是`src/core/instance/init.js`中定义的。
+Vue 实际上就是`function`实现的`class`，执行`new Vue`的时候执行了`function`，然后执行`this._init`把`options`传入，**`this._init`是一个 Vue 原型上的方法，是在`initMixin`，也就是`src/core/instance/init.js`中定义的。**
 
 ```javascript
 // src/core/instance/index.js
@@ -24,8 +24,9 @@ function Vue (options) {
 
 initMixin(Vue)
 stateMixin(Vue)
-
-export default Vue
+eventsMixin(Vue)
+lifecycleMixin(Vue)
+renderMixin(Vue)
 ```
 
 ## src/core/instance/init.js文件解析
@@ -36,7 +37,10 @@ export default Vue
 
 1. 定义`uid`
 2. 合并`options`。将传入的`options` merge 到`$options`上，所以可以通过`$options.el`访问到代码中定义的`el`，通过`$options.data`访问到我们定义的`data`。
-3. 初始化函数（生命周期、事件中心、`render`、`state`），初始化结束后判断`$options`有没有`el`。调用`vm.$mount(vm.$options.el)`进行挂载，在页面上可以看到字符串渲染到页面上。`$mount`方法是整个做挂载的方法（是个重点）。
+3. 初始化函数（生命周期、事件中心、`render`、`state`），初始化结束后判断`$options`有没有`el`。`vm.$options.el`是字符串，通过`vm.$mount(vm.$options.el)`变成 DOM 对象。调用`vm.$mount(vm.$options.el)`进行挂载，在页面上可以看到字符串渲染到页面上。`$mount`方法是整个做挂载的方法（是个重点）。
+
+- `$`表示内部定义的属性或方法，可以被外部引用
+- `_`表示内部的私有属性和方法，外部不能引用
 
 ```javascript
 export function initMixin (Vue: Class<Component>) {
@@ -122,7 +126,7 @@ export function initState (vm: Component) {
 }
 ```
 
-（2）在`initData`中，从`$options.data`中拿到`data`，就是我们定义的`data(){return {message:'Hello Vue!'}}`。然后判断`data`是不是一个`function`（正常`data`是一个函数而不是对象），是函数则调用`getData`。`getData`中调用`call`方法，返回对象，赋值给`vm._data`和`data`，如果不是对象就会报警告。然后拿到对象的`key`、`props`、`methods`并进行对比，判断是否重名。为什么不能重名？因为他们最终都挂载到vm上，也就是当前实例上。实现是用```proxy(vm,`_data`,key)```实现。
+（2）在`initData`中，从`$options.data`中拿到`data`，就是我们定义的`data(){return {message:'Hello Vue!'}}`。然后判断`data`是不是一个`function`（正常`data`是一个函数而不是对象），是函数则调用`getData`。
 
 ```javascript
 function initData (vm: Component) {
@@ -166,7 +170,13 @@ function initData (vm: Component) {
   // observe data
   observe(data, true /* asRootData */)
 }
+```
 
+`getData`中调用`call`方法，利用`call`方法是为了让 data 函数中的 this 指向组件实例 vm 。返回对象，赋值给`vm._data`和`data`，如果不是对象就会报警告。然后拿到对象的`key`、`props`、`methods`并进行对比，判断是否重名。
+
+为什么不能重名？因为他们最终都挂载到vm上，也就是当前实例上。实现是用```proxy(vm,`_data`,key)```实现。
+
+```javascript
 export function getData (data: Function, vm: Component): any {
   // #7573 disable dep collection when invoking data getters
   pushTarget()
@@ -181,7 +191,7 @@ export function getData (data: Function, vm: Component): any {
 }
 ```
 
-（3）`proxy`通过`sharedPropertyDefinition`对象定义了`get`和`set`两个函数，运行`Object.defineProperty(target, key, sharedPropertyDefinition)`方法代理了`target`和`key`，就是对`target`和`key`做了一层访问`get`和`set`，`target`就是`vm`。`vm.key`的`get`会执行`return this[sourceKey][key]`，也就是说访问`vm.key`就是会访问`this[sourceKey][key]`。`sourceKey`就是传入`_data`，所以访问`vm.message`实际上就会访问`vm._data.message`，即`mounted(){console.log(this.message);console.log(this._data.message)}`。
+（3）`proxy`是代理的意思。通过`sharedPropertyDefinition`对象定义了`get`和`set`两个函数，运行`Object.defineProperty(target, key, sharedPropertyDefinition)`方法代理了`target`和`key`，就是对`target`和`key`做了一层访问`get`和`set`，`target`就是`vm`。`vm.key`的`get`会执行`return this[sourceKey][key]`，也就是说访问`vm.key`就是会访问`this[sourceKey][key]`。`sourceKey`就是传入`_data`，所以访问`vm.message`实际上就会访问`vm._data.message`，即`mounted(){console.log(this.message);console.log(this._data.message)}`。
 
 ```javascript
 // 根据上面 proxy(vm, `_data`, key)，就是把`_data`作为sourceKey传入。
@@ -201,3 +211,5 @@ export function proxy (target: Object, sourceKey: string, key: string) {
 在node_modules下找到vue，package.json中的`module`指向的入口可能不是真的入口，因为在新建webpack项目时如果选择了Runtime + Compiler版本，则真正的入口是在build文件下的webpack.base.conf.js下的`alias`的`vue`
 
 可以在入口文件下打`debugger`，在Sources下进行debugger，第一个按钮是从一个断点跳到另外一个断点，第二个会跳过函数，第三个单步执行，可以看函数逻辑
+
+可以直接在 Console 下`console.log(vm)`去打印
