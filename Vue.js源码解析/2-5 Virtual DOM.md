@@ -18,7 +18,7 @@ Virtual DOM 就是用一个原生的 JS 对象去描述一个 DOM 节点，所�
 
 vdom是虚拟DOM(Virtual DOM)的简称，指的是用JS模拟的DOM结构，将DOM变化的对比放在JS层来做。换而言之，vdom就是JS对象。
 
-整个 VNode 的定义就是一个 class ， class 有很多属性，例如 tag 标签， data 数据是在**flow/vnode.js**定义的。 VNode 实际上是一个 Tree ，每一个 VNode 都有它的 children ，每一个 children 还是一个数组， children 还有它的 VNode ，整个就构造一个 VNode Tree 。 text 就是文本， elm 是对 DOM 对象的持有。
+**整个 VNode 的定义就是一个 class**， class 有很多属性，例如`tag`标签，`VNodeData`数据是在**flow/vnode.js**定义的。 VNode 实际上是一个 Tree ，每一个 VNode 都有它的 children ，每一个 children 还是一个数组， children 还有它的 VNode ，整个就构造一个 VNode Tree 。 text 就是文本， elm 是对 DOM 对象的持有。
 
 虚拟 DOM 到底是什么，说简单点，就是一个普通的 JavaScript 对象，包含了 tag、props、children 三个属性。
 
@@ -51,7 +51,6 @@ vdom是虚拟DOM(Virtual DOM)的简称，指的是用JS模拟的DOM结构，将D
 ```
 
 ``` javascript
-
 export default class VNode {
   tag: string | void;
   data: VNodeData | void;
@@ -127,4 +126,6 @@ export default class VNode {
 
 当然有人说虚拟DOM并不比真实的DOM快，其实也是有道理的。当每一条数据都改变时，显然真实的DOM操作更快，因为虚拟DOM还存在js中diff算法的比对过程。所以，上述性能优势仅仅适用于大量数据的渲染并且改变的数据只是一小部分的情况。
 
-实际上 Vue.js 中 Virtual DOM 是借鉴了一个开源库 snabbdom 的实现，然后加入了一些 Vue.js 特色的东西。其实 VNode 是对真实 DOM 的一种抽象描述，它的核心定义无非就几个关键属性，标签名、数据、子节点、键值等，其它属性都是用来扩展 VNode 的灵活性以及实现一些特殊 feature 的。由于 VNode 只是用来映射到真实 DOM 的渲染，不需要包含操作 DOM 的方法，因此它是非常轻量和简单的。Virtual DOM 除了它的数据结构的定义，映射到真实的 DOM 实际上要经历 VNode 的 create、diff、patch 等过程。那么在 Vue.js 中，VNode 的 create 是通过之前提到的 createElement 方法创建的。
+实际上 Vue.js 中 Virtual DOM 是借鉴了一个开源库 snabbdom 的实现，然后加入了一些 Vue.js 特色的东西。
+
+其实 VNode 是对真实 DOM 的一种抽象描述，它的核心定义无非就几个关键属性，标签名、数据、子节点、键值等，其它属性都是用来扩展 VNode 的灵活性以及实现一些特殊 feature 的。由于 VNode 只是用来映射到真实 DOM 的渲染，不需要包含操作 DOM 的方法，因此它是非常轻量和简单的。Virtual DOM 除了它的数据结构的定义，映射到真实的 DOM 实际上要经历 VNode 的 create、diff、patch 等过程。那么在 Vue.js 中，VNode 的 create 是通过之前提到的 createElement 方法创建的。

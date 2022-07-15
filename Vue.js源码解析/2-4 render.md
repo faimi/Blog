@@ -8,7 +8,49 @@
 
 ## src/core/instance/render.js文件解析
 
+### vm.$createElement
+
 （1）定义了原型上`_render`的私有方法，返回的是一个`VNode`。从`$options`拿到`render`函数（`render`函数可以用户自己写也可以通过编译生成），利用`render.call()`方法传入`vm._renderProxy`和`vm.$createElement`。`call`的第一个参数是当前上下文，`vm._renderProxy`在生产环境（ production ）下就是`vm`，在开发环境（ development ）中可能是`proxy`对象。`vm.$createElement`在`initRender`函数中定义。
+
+`initRender`函数在`src/core/instance/init.js`中执行`initRender(vm)`。`initRender`中定义了两个函数：`vm._c`和`vm.$createElement`。这两个函数最终都调用了`createElement`方法，区别是最后一个参数不一样。因为`vm._c`是被编译生成的`render`函数所使用的方法，`vm.$createElement`实际上是给我们手写`render`函数提供了一个创建 VNode 的方法。
+
+```javascript
+// src/core/instance/render.js
+export function initRender (vm: Component) {
+  vm._vnode = null // the root of the child tree
+  vm._staticTrees = null // v-once cached trees
+  const options = vm.$options
+  const parentVnode = vm.$vnode = options._parentVnode // the placeholder node in parent tree
+  const renderContext = parentVnode && parentVnode.context
+  vm.$slots = resolveSlots(options._renderChildren, renderContext)
+  vm.$scopedSlots = emptyObject
+  // bind the createElement fn to this instance
+  // so that we get proper render context inside it.
+  // args order: tag, data, children, normalizationType, alwaysNormalize
+  // internal version is used by render functions compiled from templates
+  vm._c = (a, b, c, d) => createElement(vm, a, b, c, d, false)
+  // normalization is always applied for the public version, used in
+  // user-written render functions.
+  vm.$createElement = (a, b, c, d) => createElement(vm, a, b, c, d, true)
+
+  // $attrs & $listeners are exposed for easier HOC creation.
+  // they need to be reactive so that HOCs using them are always updated
+  const parentData = parentVnode && parentVnode.data
+
+  /* istanbul ignore else */
+  if (process.env.NODE_ENV !== 'production') {
+    defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, () => {
+      !isUpdatingChildComponent && warn(`$attrs is readonly.`, vm)
+    }, true)
+    defineReactive(vm, '$listeners', options._parentListeners || emptyObject, () => {
+      !isUpdatingChildComponent && warn(`$listeners is readonly.`, vm)
+    }, true)
+  } else {
+    defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, null, true)
+    defineReactive(vm, '$listeners', options._parentListeners || emptyObject, null, true)
+  }
+}
+```
 
 ```javascript
 // src/core/instance/render.js
@@ -72,49 +114,11 @@ Vue.prototype._render = function (): VNode {
 }
 ```
 
-`initRender`函数在`src/core/instance/init.js`中执行`initRender(vm)`。`initRender`中定义了两个函数：`vm._c`和`vm.$createElement`。这两个函数最终都调用了`createElement`方法，区别是最后一个参数不一样。因为`vm._c`是被编译生成的`render`函数所使用的方法，`vm.$createElement`实际上是给我们手写`render`函数提供了一个创建 VNode 的方法。
-
-```javascript
-// src/core/instance/render.js
-export function initRender (vm: Component) {
-  vm._vnode = null // the root of the child tree
-  vm._staticTrees = null // v-once cached trees
-  const options = vm.$options
-  const parentVnode = vm.$vnode = options._parentVnode // the placeholder node in parent tree
-  const renderContext = parentVnode && parentVnode.context
-  vm.$slots = resolveSlots(options._renderChildren, renderContext)
-  vm.$scopedSlots = emptyObject
-  // bind the createElement fn to this instance
-  // so that we get proper render context inside it.
-  // args order: tag, data, children, normalizationType, alwaysNormalize
-  // internal version is used by render functions compiled from templates
-  vm._c = (a, b, c, d) => createElement(vm, a, b, c, d, false)
-  // normalization is always applied for the public version, used in
-  // user-written render functions.
-  vm.$createElement = (a, b, c, d) => createElement(vm, a, b, c, d, true)
-
-  // $attrs & $listeners are exposed for easier HOC creation.
-  // they need to be reactive so that HOCs using them are always updated
-  const parentData = parentVnode && parentVnode.data
-
-  /* istanbul ignore else */
-  if (process.env.NODE_ENV !== 'production') {
-    defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, () => {
-      !isUpdatingChildComponent && warn(`$attrs is readonly.`, vm)
-    }, true)
-    defineReactive(vm, '$listeners', options._parentListeners || emptyObject, () => {
-      !isUpdatingChildComponent && warn(`$listeners is readonly.`, vm)
-    }, true)
-  } else {
-    defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, null, true)
-    defineReactive(vm, '$listeners', options._parentListeners || emptyObject, null, true)
-  }
-}
-```
-
 （2）手写`render`函数（使用`$createElement`）
 
-这跟直接在 html 上写是不一样的。他没有一个把从插值变换的过程。之前的写法是在 html 里面定义了一个插值，会先渲染出来，然后在`new Vue`之后执行`$mount`的时候再把它从插值`message`替换成真实的数据。而这是通过纯`render`函数，不用在页面上显示插值，而是通过`render`函数执行完毕之后把`message`替换上去，体验会更好。因为手写`render`函数就不会执行把`template`转换成`render`函数这一步了，挂载的元素（`id="app1"`）实际上会替换掉定义的（`id="app"`）。这就是为什么不能在`body`上做这个事情，因为会把`body`替换。
+这跟直接在 html 上写是不一样的。他没有一个把从插值（`{{message}}`）变换的过程。之前的写法是在 html 里面定义了一个插值，会先把插值渲染出来，然后在`new Vue`之后执行`$mount`的时候再把插值替换成真实的数据。
+
+而这是通过纯`render`函数，不用在页面上显示插值，而是通过`render`函数执行完毕之后把`message`替换上去，体验会更好。因为手写`render`函数就不会执行把`template`转换成`render`函数这一步了，挂载的元素（`id="app1"`）实际上会替换掉定义的（`id="app"`）。这就是为什么不能在`body`上做这个事情，因为会把`body`替换。
 
 ```html
 <div id="app"></div>
@@ -127,6 +131,7 @@ export default {
       message: 'Hello Vue!',
     };
   },
+  // render第一个参数是 vm.$createElement ，所以createElement是函数创建 VNode ， VNode标签 是个 div
   render(createElement){
     return createElement('div',{
       attrs:{
@@ -137,7 +142,11 @@ export default {
 };
 ```
 
-（3）`vm._renderProxy`也是发生在`src/core/instance/init.js`中，如果当前是生产环境，就`vm._renderProxy = vm`，开发阶段则`initProxy(vm)`，`initProxy()`的定义在`src/core/instance/proxy.js`文件中。判断`hasProxy`（判断当前浏览器支不支持`proxy`，`proxy`实际上是 ES6 提供的 API ，实际作用就是对对象访问做一个劫持）。因为chrome支持`proxy`，所以会执行`vm._renderProxy = new Proxy(vm, handlers)`，`handlers`在目前条件下指向`hasHandler`。`hasHandler`是个判断，如果我们的元素不在`target`下，`has`为`false`。`isAllowed`是全局的属性和方法。在两个情况都不满足的条件下，执行`warnNonPresent`方法。`warnNonPresent`就是报警告。该警告是报使用了一个未在data、method定义的一个变量。
+### vm._renderProxy
+
+（1）`vm._renderProxy`也是发生在`src/core/instance/init.js`中，如果当前是生产环境，就`vm._renderProxy = vm`，开发阶段则`initProxy(vm)`，`initProxy()`的定义在`src/core/instance/proxy.js`文件中。
+
+判断`hasProxy`（判断当前浏览器支不支持`proxy`，`proxy`实际上是 ES6 提供的 API（[阮一峰老师](!https://github.com/ruanyf/es6tutorial/blob/fd3eb89a6cb827fae57be255a3ab23994cd86b73/docs/proxy.md)） ，实际作用就是对对象访问做一个劫持）。因为chrome支持`proxy`，所以会执行`vm._renderProxy = new Proxy(vm, handlers)`，`handlers`在目前条件下指向`hasHandler`。`hasHandler`是个判断，如果我们的元素不在`target`下，`has`为`false`。`isAllowed`是全局的属性和方法。在两个情况都不满足的条件下，执行`warnNonPresent`方法。`warnNonPresent`就是报警告。该警告是报使用了一个未在 data、method 定义的一个变量。
 
 ```javascript
 let initProxy
@@ -230,3 +239,64 @@ export { initProxy }
 ```
 
 `render`方法实际上就是生成一个`vnode`，出错的话`handleError`会给用户一个接口去处理一些错误，再做一系列降级。再对`vnode`进行判断是不是`VNode`，如果同时是个`Array`，说明模板会有多个根节点，会返回多个`vnode`。`vnode`实际上是`Virtual DOM`的概念。
+
+```javascript
+export function initMixin (Vue: Class<Component>) {
+  Vue.prototype._init = function (options?: Object) {
+    const vm: Component = this
+    // a uid
+    vm._uid = uid++
+
+    let startTag, endTag
+    /* istanbul ignore if */
+    if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+      startTag = `vue-perf-start:${vm._uid}`
+      endTag = `vue-perf-end:${vm._uid}`
+      mark(startTag)
+    }
+
+    // a flag to avoid this being observed
+    vm._isVue = true
+    // merge options
+    if (options && options._isComponent) {
+      // optimize internal component instantiation
+      // since dynamic options merging is pretty slow, and none of the
+      // internal component options needs special treatment.
+      initInternalComponent(vm, options)
+    } else {
+      vm.$options = mergeOptions(
+        resolveConstructorOptions(vm.constructor),
+        options || {},
+        vm
+      )
+    }
+    /* istanbul ignore else */
+    if (process.env.NODE_ENV !== 'production') {
+      initProxy(vm)
+    } else {
+      vm._renderProxy = vm
+    }
+    // expose real self
+    vm._self = vm
+    initLifecycle(vm)
+    initEvents(vm)
+    initRender(vm)
+    callHook(vm, 'beforeCreate')
+    initInjections(vm) // resolve injections before data/props
+    initState(vm)
+    initProvide(vm) // resolve provide after data/props
+    callHook(vm, 'created')
+
+    /* istanbul ignore if */
+    if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+      vm._name = formatComponentName(vm, false)
+      mark(endTag)
+      measure(`vue ${vm._name} init`, startTag, endTag)
+    }
+
+    if (vm.$options.el) {
+      vm.$mount(vm.$options.el)
+    }
+  }
+}
+```

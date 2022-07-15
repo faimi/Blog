@@ -12,7 +12,7 @@ Vue.js 利用`createElement`方法创建`VNode`，它定义在`src/core/vdom/cre
 
 `createElement`的定义支持六个参数，第一个参数`context`是`vm`实例，第二个`tag`是`VNode`标签（`tag: "div"`），第三个`data`是跟`VNode`相关的数据，第四个`children`是`VNode`的子节点（`children: [VNode]`），有`children`才能构造成`VNode tree`，可以完美映射到`DOM Tree`。
 
-进行参数重载，检测参数，是对参数个数不一致的处理。如果没有`data`，就会把后面的参数往前移动。
+进行参数重载，检测参数，是对参数个数不一致的处理。即没有`data`，传入的是`children`，就会把参数往后移动。
 
 对`alwaysNormalize`进行判断，然后为`normalizationType`赋值常变量。
 
@@ -40,7 +40,7 @@ export function createElement (
 }
 ```
 
-### _createElement()函数
+### _createElement()
 
 `_createElement`函数的流程略微有点多，我们接下来主要分析 2 个重点的流程 —— `children`的规范化以及`VNode`的创建。
 
@@ -68,7 +68,9 @@ export const createEmptyVNode = (text: string = '') => {
 
 对`children`做`normalizeChildren`。当手写render函数时，对第三个参数传了`this.message`，那是一个普通的值，但是实际上`children`应该是个数组，而且每个数组都是`VNode`。`normalizeChildren`和`simpleNormalizeChildren`函数来自`src/core/vdom/helpers/normalize-children.js`文件。
 
-`simpleNormalizeChildren`对`children`进行了一层遍历。`children`是个类数组，遍历发现如果有元素是数组，就调用`Array.prototype.concat.apply()`方法把`children`拍平，就是让嵌套数组成为一维数组（是因为存在`functional component`函数式组件返回的是一个数组而不是一个根节点）。最终的期望就是`children`是个一维数组，每个都是一个`VNode`。
+（1）`simpleNormalizeChildren`
+
+`simpleNormalizeChildren`对`children`进行了一层遍历。`children`是个类数组，遍历发现如果有元素是数组，就调用`Array.prototype.concat.apply()`方法把`children`拍平（只拍一次），就是让嵌套数组成为一维数组（是因为存在`functional component`函数式组件返回的是一个数组而不是一个根节点）。最终的期望就是`children`是个一维数组，每个都是一个`VNode`。
 
 - Array.isArray()：判断传递的值是否是一个 Array 。如果对象是 Array ，则返回 true ，否则为 false 。
 - 数组降维
@@ -81,22 +83,13 @@ export const createEmptyVNode = (text: string = '') => {
   console.log(simpleNormalizeChildren(children)) // [1, 2, 3, [4, 5, 6], 7, 8, 9, 10]
   ```
 
-`normalizeChildren`最终目标也是返回一个一维的数组，每个都是`VNode`。首先判断是否是个基础类型，是的话直接返回一维数组，数组长度为1，`createTextVNode`实例化一个`VNode`，前三个参数是`undefined`，第四个参数是个`string`，是返回一个文本`VNode`；不是基础类型则判断是否是`Array`类型，是的话调用`normalizeArrayChildren`方法，否则返回`undefined`。
+（2）`normalizeChildren`
 
-`normalizeArrayChildren`返回的是`res`数组。遍历`children`，如果`children[i]`是`Array`数组（可能多层嵌套，例如编译`slot`、`v-for`的时候会产生嵌套数组的情况），递归调用`normalizeArrayChildren`，做个优化（如果第一个节点和最后一个节点都是文本，则把这两个合并在一起），再做一层`push`；如果是基础类型，判断是否是文本节点，是的话`createTextVNode`合并，不是的话直接`push`；如果是`VNode`，例如`v-for`，则进行处理再push。最终返回`res`。
-`normalizeArrayChildren`主要是递归和合并。经过对`children`的规范化，`children`变成了一个类型为`VNode`的`Array`。
+`normalizeChildren`最终目标也是返回一个一维的数组，每个都是`VNode`。
+
+首先判断是否是个基础类型，是的话直接返回一维数组，数组长度为1，`createTextVNode`实例化一个`VNode`，前三个参数是`undefined`，第四个参数是个`string`，是返回一个文本`VNode`；不是基础类型则判断是否是`Array`类型，是的话调用`normalizeArrayChildren`方法，否则返回`undefined`。
 
 ```javascript
-// src/core/vdom/helpers/normalize-children.js
-export function simpleNormalizeChildren (children: any) {
-  for (let i = 0; i < children.length; i++) {
-    if (Array.isArray(children[i])) {
-      return Array.prototype.concat.apply([], children)
-    }
-  }
-  return children
-}
-
 export function normalizeChildren (children: any): ?Array<VNode> {
   return isPrimitive(children)
     ? [createTextVNode(children)]
@@ -104,7 +97,14 @@ export function normalizeChildren (children: any): ?Array<VNode> {
       ? normalizeArrayChildren(children)
       : undefined
 }
+```
 
+（3）`normalizeArrayChildren`
+
+`normalizeArrayChildren`返回的是`res`数组。遍历`children`，如果`children[i]`是`Array`数组（可能多层嵌套，例如编译`slot`、`v-for`的时候会产生嵌套数组的情况），递归调用`normalizeArrayChildren`，做个优化（如果最后一个节点和下次第一个节点都是文本，则把这两个合并在一起），再做一层`push`；如果是基础类型，判断是否是文本节点，是的话则通过`createTextVNode`方法转换成`VNode`类型，不是的话直接`push`；如果是`VNode`，例如`v-for`，如果`children`是一个列表并且列表还存在嵌套的情况，则根据`nestedIndex`去更新它的`key`。最终返回`res`。
+`normalizeArrayChildren`主要是递归和合并。经过对`children`的规范化，`children`变成了一个类型为`VNode`的`Array`。
+
+```javascript
 function normalizeArrayChildren (children: any, nestedIndex?: string): Array<VNode> {
   const res = []
   let i, c, lastIndex, last
@@ -156,7 +156,9 @@ function normalizeArrayChildren (children: any, nestedIndex?: string): Array<VNo
 
 #### VNode 的创建
 
-对`tag`进行判断，是个`string`还是组件。如果是`string`，判断是不是 HTML 原生保留标签。如果是则创建一个普通的保留标签，然后直接创建一个普通`VNode`。这个`VNode`就是`render`函数返回的`VNode`。
+对`tag`进行判断，是个`string`还是组件。如果是`string`，判断是不是 HTML 原生保留标签。如果是则创建一个普通的保留标签，然后直接创建一个普通`vnode`。`vnode = render.call(vm._renderProxy, vm.$createElement)`函数返回的`vnode`是`createElement(vm, a, b, c, d, true)`的返回值。同时把`vnode`返回给`Vue.prototype._render`。
+
+这里先对`tag`做判断，如果是`string`类型，则接着判断是不是 HTML 原生保留标签，则直接创建一个普通`vnode`，如果是为已注册的组件名，则通过`createComponent`创建一个组件类型的`vnode`，否则创建一个未知的标签的`vnode`。如果是`tag`一个`Component`类型，则直接调用`createComponent`创建一个组件类型的`vnode`节点。对于`createComponent`创建组件类型的`vnode`的过程，本质上它还是返回了一个`vnode`。
 
 ```javascript
 // src/core/vdom/create-element.js
