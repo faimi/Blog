@@ -24,16 +24,20 @@ export const patch: Function = createPatchFunction({ nodeOps, modules })
 
 拿到`modules`和`nodeOps`，把`hooks`保留到`cbs`对象中，遍历所有模块，拿到所有模块的钩子(`hooks`)。即初始化定义。
 
-最后返回一个 function `patch`，也就是说调用`vm.__patch__()`方法就是调用这个函数。
+`createPatchFunction`内部定义了一系列的辅助方法，最终返回了一个`patch`方法，这个方法就赋值给了`vm._update`函数里调用的`vm.__patch__`。
 
 【编程技巧】
 问：为何 Vue.js 源码绕了这么一大圈，把相关代码分散到各个目录？
 答：利用了函数柯里化的技巧，因为`patch`是平台相关的，而不同平台的`patch`的主要逻辑部分是相同的，所以这部分公共的部分托管在`core`这个大目录下。差异化部分只需要通过参数（`nodeOps`和`modules`）来区别的。这里用到了一个函数柯里化的技巧，通过`createPatchFunction`把差异化参数提前固化，这样不用每次调用`patch`的时候都传递`nodeOps`和`modules`了。
 `nodeOps`和`modules`都是与平台相关的。因为 Vue.js 是跨端的，可以跑在 web 上也可以跑在 Weex 上，在 Web 和 Weex 环境，它们把 Virtual DOM 映射到平台 DOM 的方法是不同的，并且对 DOM 包括的属性模块创建和更新也不尽相同。因此每个平台都有各自的`nodeOps`和`modules`，它们的代码需要托管在`src/platforms`这个大目录下。
 
-### DOM 树构建
+## 案例解析
 
-`patch`函数实际上传入了四个参数，`oldVnode`是真实的 DOM（div#app），`vnode`是 Virtual DOM 。`isRealElement`判断是不是真实 DOM ，因此为 true 。`emptyNodeAt`是把真实 DOM 转换成`Vnode`，即`oldVnode`变成了`VNode`。`oldElm`变成了 div#app ，`parentElm`变成了`body`。
+`patch`函数实际上传入了四个参数，`oldVnode`是真实的 DOM（div#app），`vnode`是 Virtual DOM ，`hydrating`在非服务端渲染情况下为 false ，`removeOnly`为 false 。
+
+`isRealElement`判断是不是真实 DOM ，因为传入的`oldVnode`实际上是一个 DOM container ，因此为 true 。`emptyNodeAt`是把真实 DOM 转换成`Vnode`，即`oldVnode`变成了`VNode`。
+
+`oldElm`变成了 div#app ，`parentElm`变成了`body`。
 
 `createElm`的作用是通过虚拟节点创建真实的 DOM 并插入到它的父节点中。参数`refElm`是参考的插入节点。`vnode.tag`是`div`，进行组件检测，如果组件没有全局注册或局部注册，就会报错。因为`vnode.ns`是`undefined`，所以执行`createElement`方法。该方法定义在`src/platforms/web/runtime/node-ops.js`文件中。该方法使用了原生 API `document.createElement`。
 
