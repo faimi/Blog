@@ -6,13 +6,17 @@
 
 ## src/core/vdom/create-element.js文件解析
 
-此时传入的是一个组件对象，`object`类型，所以要执行`vnode = createComponent(tag, data, context, children)`代码。
+`_createElement`方法主要的函数是`normalizeChildren`方法，然后通过判断`tag`类型去创建不同的 vnode 。这次的 `tag`是组件对象，是 object 类型，也就是 vnode 生成用的是`vnode = createComponent(tag, data, context, children)`。`createComponent`方法定义在 src/core/vdom/create-component.js 文件中。
 
-## src/core/vdom/create-component.js文件解析
+createComponent 针对组件渲染这个 case 主要就 3 个关键步骤：
+
+构造子类构造函数，安装组件钩子函数和实例化 vnode。
+
+## 构造子类构造函数
 
 第一个参数支持传入组件类型的类，也可以是个函数，也可以是个对象（在本例子中是`Object`对象）。第二个是 VNode 相关的 data 。第三个参数是上下文，也是当前 vm 的实例。第四个参数是组件的子的 VNode 。
 
-`baseCtor`是大 Vue （`ƒ Vue(options)`），如果传入的`Ctor`是个对象的话，就把它转换成构造器`ƒ VueComponent(options)`。在构造器的属性中，其中`components`是引入的组件，name是`app`，`render`是`ƒ ()`。
+`baseCtor`是大 Vue （`ƒ Vue(options)`）。如果传入的`Ctor`是个对象的话，就把它转换成构造器`ƒ VueComponent(options)`。在构造器的属性中，其中`components`是引入的组件，name是`app`，`render`是`ƒ ()`。
 
 ### src/core/global-api/extend.js文件解析
 
@@ -24,13 +28,90 @@
 > *是一个限定符，用来修饰前一个字符或分组，限定匹配重复的数量为任意数量。
 > [\w-] 匹配任意单词字符[a-zA-Z0-9]、下划线或 '-' 。\w后的 '-' 用来弥补 \w 不能匹配 '-' 的局限。（匹配的是字符）
 
-定义了一个子的构造函数`Sub`，调用了`this._init()`方法，就是把子的构造器的原型指向父的原型。目的是让`Sub`有跟`Vue`一样的能力。最后对于这个`Sub`构造函数做了缓存，避免多次执行`Vue.extend`的时候对同一个子组件重复构造。`cached`第一次肯定是没有的。
+```javascript
+export function validateComponentName (name: string) {
+  if (!new RegExp(`^[a-zA-Z][\\-\\.0-9_${unicodeRegExp.source}]*$`).test(name)) {
+    warn(
+      'Invalid component name: "' + name + '". Component names ' +
+      'should conform to valid custom element name in html5 specification.'
+    )
+  }
+  if (isBuiltInTag(name) || config.isReservedTag(name)) {
+    warn(
+      'Do not use built-in or reserved HTML elements as component ' +
+      'id: ' + name
+    )
+  }
+}
+```
 
-## src/core/vdom/create-component.js文件解析
+定义了一个子的构造函数`Sub`，也调用了`this._init()`方法，就是把子的构造器的原型指向父的原型，也就是原型继承。然后进行一系列的优化、实例化。目的是让`Sub`有跟`Vue`一样的能力。最后对于这个`Sub`构造函数做了缓存，避免多次执行`Vue.extend`的时候对同一个子组件重复构造。`cached`第一次肯定是没有的。
+
+`Vue.extend`的作用就是构造一个`Vue`的子类，它使用一种非常经典的原型继承的方式把一个纯对象转换一个继承于`Vue`的构造器`Sub`并返回，然后对`Sub`这个对象本身扩展了一些属性，如扩展`options`、添加全局`API`等；并且对配置中的`props`和`computed`做了初始化工作；最后对于这个`Sub`构造函数做了缓存，避免多次执行`Vue.extend`的时候对同一个子组件重复构造。
+
+```javascript
+Vue.extend = function (extendOptions: Object): Function {
+  extendOptions = extendOptions || {}
+  const Super = this
+  const SuperId = Super.cid
+  const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {})
+  if (cachedCtors[SuperId]) {
+    return cachedCtors[SuperId]
+  }
+  const name = extendOptions.name || Super.options.name
+  if (process.env.NODE_ENV !== 'production' && name) {
+    validateComponentName(name)
+  }
+  const Sub = function VueComponent (options) {
+    this._init(options)
+  }
+  Sub.prototype = Object.create(Super.prototype)
+  Sub.prototype.constructor = Sub
+  Sub.cid = cid++
+  Sub.options = mergeOptions(
+    Super.options,
+    extendOptions
+  )
+  Sub['super'] = Super
+  // For props and computed properties, we define the proxy getters on
+  // the Vue instances at extension time, on the extended prototype. This
+  // avoids Object.defineProperty calls for each instance created.
+  if (Sub.options.props) {
+    initProps(Sub)
+  }
+  if (Sub.options.computed) {
+    initComputed(Sub)
+  }
+  // allow further extension/mixin/plugin usage
+  Sub.extend = Super.extend
+  Sub.mixin = Super.mixin
+  Sub.use = Super.use
+  // create asset registers, so extended classes
+  // can have their private assets too.
+  ASSET_TYPES.forEach(function (type) {
+    Sub[type] = Super[type]
+  })
+  // enable recursive self-lookup
+  if (name) {
+    Sub.options.components[name] = Sub
+  }
+  // keep a reference to the super options at extension time.
+  // later at instantiation we can check if Super's options have
+  // been updated.
+  Sub.superOptions = Super.options
+  Sub.extendOptions = extendOptions
+  Sub.sealedOptions = extend({}, Sub.options)
+  // cache constructor
+  cachedCtors[SuperId] = Sub
+  return Sub
+}
+```
+
+## 安装组件钩子函数
 
 然后判断`Ctor`是否是个函数，不是则报错。
 
-`installComponentHooks(data)`安装一些组件的钩子。遍历`hooksToMerge`。`componentVNodeHooks`是每个组件都会有的 hooks ，例如`init`、`prepatch`、`insert`、`destroy`。整个`installComponentHooks`的过程就是把`componentVNodeHooks`的钩子函数合并到`data.hook`中。在合并过程中，如果某个时机的钩子已经存在`data.hook`中，那么通过执行`mergeHook`函数做合并，这个逻辑很简单，就是在最终执行的时候，依次执行这两个钩子函数即可。
+`installComponentHooks(data)`安装一些组件的钩子。遍历`hooksToMerge`。`componentVNodeHooks`是每个组件都会有的 hooks ，例如`init`、`prepatch`、`insert`、`destroy`。整个`installComponentHooks`的过程就是把`componentVNodeHooks`的钩子函数 merge 到`data.hook`中。在合并过程中，如果某个时机的钩子已经存在`data.hook`中，那么通过执行`mergeHook`函数做合并，这个逻辑很简单，就是在最终执行的时候，依次执行这两个钩子函数即可。
 
 ```javascript
 // src/core/vdom/create-component.js
@@ -121,6 +202,8 @@ function mergeHook (f1: any, f2: any): Function {
   return merged
 }
 ```
+
+## 实例化 vnode
 
 生成 vnode 组件，和 VNode 不一样。标识会加上`vue-component-`（`vue-component-1-app`）。组件 vnode 的`children`一定是个空，`text`和`elm`也是空，但是`componentOptions`里包含了构造器、`props`数据、事件数据、`children`（`{ Ctor, propsData, listeners, tag, children }`）。
 
@@ -237,4 +320,4 @@ export function createComponent (
 核心：
 1、子组件组件构造器的生成。是基于大 Vue 的。
 2、组件 vnode data 都会有 hook ，这些 hook 会 merge 到组件的 VNode Hook 。
-3、生成组件 vnode 。
+3、生成组件 vnode ，例如没有 children ，多了 componentOptions 。

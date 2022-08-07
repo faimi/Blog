@@ -4,11 +4,11 @@
 
 逻辑：
 
-`Vue`的`_update`是实例的一个私有方法，`_update`方法的作用是把`VNode`渲染成真实的`DOM`。定义在`src/core/instance/lifecycle.js`文件下。`_update`被调用的时机有2个，首次渲染的时候会调用`_update`，把`VNode`映射成真实`DOM`；当改变数据的时候，数据改变也会 驱动视图变化，也会调用`_update`方法。
+`Vue`的`_update`是实例的一个私有方法，`_update`方法的作用是把`VNode`渲染成真实的`DOM`。定义在`src/core/instance/lifecycle.js`文件下。`_update`被调用的时机有2个，首次渲染的时候会调用`_update`，把`VNode`映射成真实`DOM`；当改变数据的时候，数据改变也会驱动视图变化，也会调用`_update`方法。
 
 ## src/core/instance/lifecycle.js
 
-定义数据分析变量（也就是第二种时机，因此在第一种时机下，变量都为`null`）。因为是`null`所以会进入 initial render 下，调用`vm.__patch__()`方法。`vm.__patch__()`定义在`src/platforms/web/runtime/index.js`文件下。首次调用时`vm.$el`是真实的 DOM 对象，`vnode`是 Virtual DOM 。 updates 时`prevVnode`和`vnode`都是 Virtual DOM 。
+定义数据分析变量（也就是第二种时机，因此在第一种时机下，变量都为`null`）。因为是`null`所以会进入 initial render 情况下，调用`vm.__patch__()`方法。`vm.__patch__()`定义在`src/platforms/web/runtime/index.js`文件下。首次调用时`vm.$el`是真实的 DOM 对象，`vnode`是 Virtual DOM 。 updates 时`prevVnode`和`vnode`都是 Virtual DOM 。
 
 `inBrowser`是指浏览器环境。因为Vue.js可以跑在服务端，因此在服务端渲染中，没有真实的浏览器`DOM`环境，所以不需要把`VNode`最终转换成`DOM`，因此是一个空函数，而在浏览器端渲染中，它指向了`patch`方法，它的定义在`src/platforms/web/runtime/patch.js`文件夹中。
 
@@ -43,7 +43,9 @@ export const patch: Function = createPatchFunction({ nodeOps, modules })
 
 `createChildren`方法是创建子节点。如果是`array`，则遍历`children`，递归调用`createElm`创建，把`vnode.elm`作为父亲节点插入。如果`vnode.text`是一个普通对象，调用`nodeOps.appendChild`添加。总而言之，如果 VNode 还有子节点，调用`createElm`传子节点。
 
-然后调用`insert`方法插入，`parentElm`是挂载节点，`vnode.elm`是当前 VNode 节点，`refElm`是参考节点。如果有参考节点，它的`parentNode`是否跟`parent`相等，相等调用`insertBefore`，否则`appendChild`。`insertBefore`和`appendChild`都是对原生 DOM 进行封装。
+然后调用`insert`方法插入，`parentElm`是挂载节点，`vnode.elm`是当前 VNode 节点，`refElm`是参考节点。如果有参考节点，它的`parentNode`是否跟`parent`相等，相等调用`insertBefore`，否则`appendChild`。`insertBefore`和`appendChild`都是对原生 DOM 进行封装。**真实的插入就是使用了`insert`方法。**
+
+- `node.`都是原生 DOM 的方法
 
 因此真实插入是靠`insert`。先插入子节点再插入父节点，父节点再挂载到真实DOM 上（body）`parentElm`。
 
