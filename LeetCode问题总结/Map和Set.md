@@ -87,17 +87,24 @@ map.forEach((v, k) => {
 > entries() 方法返回一个新的包含 [key, value] 的 Iterator 对象，返回的迭代器的迭代顺序与 Map 对象的插入顺序相同。
 
 ```javascript
-[...map.entries()].forEach(([v, k]) => {
-    console.log(v, k) // 1 1    3 2    2 3    5 1    7 1
+[...map.entries()].forEach(([k, v]) => {
+    console.log(k, v) // 1 1    3 2    2 3    5 1    7 1
 });
 ```
 
 但是实际上等价于
 
 ```javascript
-[...map].forEach(([v, k]) => {
-    console.log(v, k) // 1 1    3 2    2 3    5 1    7 1
+[...map].forEach(([k, v]) => {
+    console.log(k, v) // 1 1    3 2    2 3    5 1    7 1
 });
+```
+
+如果不用`forEach`遍历`map`
+
+```javascript
+for (const [num, occ] of map.entries()) {
+}
 ```
 
 另外
@@ -151,3 +158,35 @@ console.log(Array.from(new Set(result))) //[2, 3, 5, 9, 4, 7, 10]
 ```
 
 所以Set集合与Array.from()连用就可以帮助数组去重
+
+
+## 剑指 Offer II 004. 只出现一次的数字 
+
+`forEach`直接`return`是做不了的，需要对其进行赋值再`return`。
+
+```javascript
+var singleNumber = function(nums) {
+    map.forEach((v,k)=>{
+        if(v==1){
+            return k
+        }
+    })
+};
+```
+
+```javascript
+var singleNumber = function(nums) {
+    map.forEach((v,k)=>{
+        if(v==1){
+            num=k
+        }
+    })
+    return num
+};
+```
+
+
+
+# 总结
+
+涉及到`Map`，用`const .. of ..`和`map.forEach`最优
