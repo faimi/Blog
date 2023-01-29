@@ -1,0 +1,1 @@
+修改`package.json`中的`scripts`时， mac 系统是`"start": "export PORT=5000 && craco start"`， windows 系统是`"start": "set PORT=5000 && craco start"`

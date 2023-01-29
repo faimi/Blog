@@ -1,0 +1,1 @@
+1. hooks 不能在全局使用，只能在 react 组件中或者自定义的 hooks 中使用。自定义 hooks 需要遵循 useXXX 的规范。
