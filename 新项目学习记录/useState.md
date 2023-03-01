@@ -74,17 +74,32 @@ setSecondOptions(old => { old.push({ value: row.id, label: row.name }); return o
 
 ```typescript
 setFirstOptions(old => [...old, { value: row.id, label: row.name }])
-
 ```
 
 所以不是慢的原因
 
-6. 场景：一个修改的Modal组件，想利用`const [menuTypeValue, setMenuTypeValue] = useState(props.modifyData.menuType);`存储不同的`menuType`，但是打开过一次Modal之后，后面的`menuTypeValue`不会变了，即传进来的`props.modifyData.menuType`没有及时更新。
+6. 场景：一个修改功能的Modal组件，想利用`const [menuTypeValue, setMenuTypeValue] = useState(props.modifyData.menuType);`存储不同的`menuType`，但是打开过一次Modal之后，后面的`menuTypeValue`不会变了，即传进来的`props.modifyData.menuType`没有及时更新。
 
 疑惑：`useState`是不是初始化就一次，后面初始化的内容变了也不会初始化了？
 答：是的，[https://juejin.cn/post/6997020924205596702](https://juejin.cn/post/6997020924205596702)
 
-为什么不能`const [menuTypeValue, setMenuTypeValue] = useState(props.modifyData.menuType);setMenuTypeValue(props.modifyData.menuType)`?
+为什么不能
+```typescript
+const [menuTypeValue, setMenuTypeValue] = useState(props.modifyData.menuType);setMenuTypeValue(props.modifyData.menuType)
+```
 [问题在于，setCounter函数在组件渲染时被调用、更新状态，并导致重新渲染，而且是无限重新渲染。](https://juejin.cn/post/7176637831199064123)
 
-为什么要用`useState`？因为随着`Modal`的关闭，`useState`的数据依旧还在。
+为什么要用`useState`？
+因为随着`Modal`的关闭，`useState`的数据依旧还在。
+
+解决办法：用`useEffect`去监听传进来的参数`props.modifyData`
+
+```typescript
+useEffect(() => {
+    setMenuTypeValue(props.modifyData.menuType);
+    setIsFrameValue(props.modifyData.isFrame);
+    setIsCacheValue(props.modifyData.isCache);
+    setVisibleValue(props.modifyData.visible);
+    setStatusValue(props.modifyData.status);
+}, [props.modifyData]);
+```
