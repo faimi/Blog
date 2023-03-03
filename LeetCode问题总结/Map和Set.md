@@ -111,3 +111,10 @@ for (const [k, v] of wordmap) {
 ```
 
 ## 涉及到`Map`，用`const .. of ..`和`map.forEach`最优
+
+## 数组化 map 的 keys 和 values
+
+```javascript
+Array.from(map.keys());
+Array.from(map.values())
+```
