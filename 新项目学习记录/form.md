@@ -15,5 +15,9 @@ const value = form.getFieldsValue('name'); // 获取单个表单数据
 4. 一个`<Form.Item></Form.Item>`只有一个组件就好。
 5. 若`<Modal></Modal>`作为修改模块时，`<Form></Form>`组件不要用`form={form}`，因为这样会导致数据的延迟。
 这是为什么呢？？？
-6. 清空 Form 的 Select 的已选选项：`form.setFieldValue('FormItem的name', undefined)`；清空整个 Form ：`form.resetFields()`
+6. 清空 Form 的 Select 的已选选项：`form.setFieldValue('FormItem的name', undefined)`；清空 checkbox 的已选选项：`form.setFieldValue(['FormItem的name'])`；清空整个 Form ：`form.resetFields()`
 7. 自定义组件：[https://juejin.cn/post/7196907808225394747](https://juejin.cn/post/7196907808225394747)
+
+# 解决问题思路
+
+遇到步骤的结果不对时，多用`debugger`和`console.log`的**顺序**，看看是初始的数据获取出问题，还是后面的数据没有达到覆盖出问题。

@@ -13,3 +13,4 @@ render() {
 ```
 4. 传`modifyData`到ModifyModal组件中，如何在定义useState的时候就获取到`props.modifyData.menuId`数据？
 5. 不要改入参
+6. 需要配置less和@，不然不起作用
